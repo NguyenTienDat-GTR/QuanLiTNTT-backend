@@ -2,6 +2,10 @@ package com.example.quanlitntt_backend.utils;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+<<<<<<< HEAD
+=======
+import java.util.Calendar;
+>>>>>>> 7a251c5 (create api for NamHoc)
 import java.util.Date;
 import java.util.Locale;
 
@@ -25,5 +29,16 @@ public class DateUtil{
             return null;
         }
     }
+<<<<<<< HEAD
+=======
+
+    public static Date addYearToDate(Date ngayBatDauFormatted, int i) {
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(ngayBatDauFormatted);
+        calendar.add(Calendar.YEAR, i);
+        return calendar.getTime();
+    }
+>>>>>>> 7a251c5 (create api for NamHoc)
 }
 

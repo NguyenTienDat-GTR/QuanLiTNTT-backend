@@ -20,10 +20,12 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
     @Autowired
     private HuynhTruongRepository huynhTruongRepository;
 
+
     @Autowired
     private TaiKhoanRepository taiKhoanRepository;
 
-    private GenerateMa generateMa = new GenerateMa();
+    private final GenerateMa generateMa = new GenerateMa();
+
 
     @Override
     public HuynhTruong addHuynhTruong(HuynhTruongDto huynhTruongDTO) {
