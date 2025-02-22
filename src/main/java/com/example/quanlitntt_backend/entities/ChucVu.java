@@ -15,7 +15,11 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class ChucVu {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "maChucVu")
     private String maChucVu;
 
