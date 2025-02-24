@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "ChucVu_HuynhTruong", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"maHT", "namHoc"})
+@Table(name = "chuc_vu_huynh_truong", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"maht", "nam_hoc"})
 })
 @Getter
 @Setter
@@ -22,17 +22,17 @@ public class ChucVuHuynhTruong {
 
     @ManyToOne
     @MapsId("maHT")
-//    @JoinColumn(name = "maHT")
+//    @JoinColumn(name = "maht")
     private HuynhTruong huynhTruong;
 
     @ManyToOne
     @MapsId("namHoc")
-//    @JoinColumn(name = "namHoc")
+//    @JoinColumn(name = "nam_hoc")
     private NamHoc namHoc;
 
     @ManyToOne
     @MapsId("maChucVu")
-//    @JoinColumn(name = "maChucVu")
+//    @JoinColumn(name = "ma_chuc_vu")
     private ChucVu chucVu;
 }
 

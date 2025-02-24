@@ -14,12 +14,12 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class ChucVuHuynhTruongKey implements Serializable {
 
-    @Column(name = "maHT", length = 8)
+    @Column(name = "maht")
     private String maHT;
 
-    @Column(name = "namHoc", length = 9)
+    @Column(name = "nam_hoc")
     private String namHoc;
 
-    @Column(name = "maChucVu", length = 4)
+    @Column(name = "ma_chuc_vu")
     private String maChucVu;
 }

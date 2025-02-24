@@ -11,11 +11,11 @@ import java.util.List;
 @ToString
 public class ChucVuHuynhTruongDto {
     private String maHT;
-    private List<String> listMaHT;
     private String tenThanh;
     private String ho;
     private String ten;
+    private String tenChucVu;
     private String namHoc;
     private String maChucVu;
-    private String tenChucVu;
+
 }
