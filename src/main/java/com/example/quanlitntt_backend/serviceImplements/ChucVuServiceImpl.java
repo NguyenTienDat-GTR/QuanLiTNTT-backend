@@ -33,6 +33,16 @@ public class ChucVuServiceImpl implements ChucVuService {
     }
 
     @Override
+    public Optional<ChucVu> getChucVuByMa(String maChucVu) {
+
+        if (chucVuRepository.findById(maChucVu).isPresent()) {
+            return chucVuRepository.findById(maChucVu);
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
     public ChucVu addChucVu(ChucVuDto chucVuDto) {
 
         ChucVu chucVu = new ChucVu();

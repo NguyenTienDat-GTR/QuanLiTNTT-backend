@@ -2,6 +2,8 @@ package com.example.quanlitntt_backend.dto;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -9,6 +11,7 @@ import lombok.*;
 @ToString
 public class ChucVuHuynhTruongDto {
     private String maHT;
+    private List<String> listMaHT;
     private String tenThanh;
     private String ho;
     private String ten;

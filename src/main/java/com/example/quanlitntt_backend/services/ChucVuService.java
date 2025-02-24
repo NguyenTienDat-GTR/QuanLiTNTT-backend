@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface ChucVuService {
     public List<ChucVu> getAllChucVu();
     public Optional<ChucVu> getChucVuByTen(String tenChucVu);
+    public Optional<ChucVu> getChucVuByMa(String maChucVu);
     public ChucVu addChucVu(ChucVuDto chucVuDto);
     public ChucVu updateChucVu(ChucVuDto chucVuDto);
     public void deleteChucVu(String maChucVu);
