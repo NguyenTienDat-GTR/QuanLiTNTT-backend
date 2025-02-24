@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 
@@ -154,6 +155,56 @@ public class HuynhTruongController {
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Page.empty());
+        }
+    }
+
+    @PostMapping("/addFromExcel")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> addHuynhTruongFromExcel(@RequestParam("file") MultipartFile file) {
+        try {
+            huynhTruongService.addHuynhTruongFromExcel(file);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Thêm Huynh Trưởng từ file Excel thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi thêm Huynh Trưởng từ file Excel: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/getByMa")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> getHuynhTruongByMa(@RequestParam String maHT) {
+        try {
+            return huynhTruongService.getHuynhTruongByMa(maHT)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi lấy thông tin Huynh Trưởng: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/getBySoDT")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> getHuynhTruongBySoDT(@RequestParam String soDT) {
+        try {
+            return huynhTruongService.getHuynhTruongBySoDT(soDT)
+                    .map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi lấy thông tin Huynh Trưởng: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/active/{maHT}")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG')")
+    public ResponseEntity<?> activeHuynhTruong(@PathVariable String maHT) {
+        try {
+            huynhTruongService.activeHuynhTruong(maHT);
+            return ResponseEntity.status(HttpStatus.OK).body("Kích hoạt Huynh Trưởng thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi kích hoạt Huynh Trưởng: " + e.getMessage());
         }
     }
 

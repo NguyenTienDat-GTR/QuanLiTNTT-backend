@@ -6,6 +6,7 @@ import com.example.quanlitntt_backend.entities.enums.CapSao;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,5 +31,10 @@ public interface HuynhTruongService {
     public List<HuynhTruong> getHuynhTruongByNamHoc(String namHoc);
 
     Page<HuynhTruong> getAllHuynhTruong(Pageable pageable, String sortBy);
+
+    // them Huynh truong tu file excel
+    public void addHuynhTruongFromExcel(MultipartFile file);
+
+    public void activeHuynhTruong(String maHT);
 
 }
