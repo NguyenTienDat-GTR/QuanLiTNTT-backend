@@ -20,7 +20,7 @@ public class Lop {
     @Column(name = "MaLop")
     private String maLop;
 
-    @Column(name = "TenLop")
+    @Column(name = "TenLop", unique = true)
     @NotNull(message = "Tên lớp không được để trống")
     private String tenLop;
 
