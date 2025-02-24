@@ -28,7 +28,6 @@ public class AuthServiceImpl implements AuthService {
         UserDetails userDetails = taiKhoanDetailService.loadUserByUsername(tenDangNhap);
 
 
-
         // Kiểm tra mật khẩu
         if (!passwordEncoder.matches(matKhau, userDetails.getPassword())) {
             throw new RuntimeException("Mật khẩu không chính xác");

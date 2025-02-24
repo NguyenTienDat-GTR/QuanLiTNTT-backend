@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class NganhDto {
-    private MaNganh maNganh;
+    private String maNganh;
 
     @NotNull(message = "Tên ngành không được để trống")
     private String tenNganh;
