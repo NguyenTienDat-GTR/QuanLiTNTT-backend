@@ -1,6 +1,7 @@
 package com.example.quanlitntt_backend.entities;
 
 import com.example.quanlitntt_backend.entities.enums.GioiTinh;
+import com.example.quanlitntt_backend.entities.enums.TrangThaiHocVu;
 import com.example.quanlitntt_backend.entities.enums.TrinhDo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -25,8 +26,7 @@ public class ThieuNhi {
     private String maTN;
 
     @OneToOne
-    @MapsId
-    @JoinColumn(name = "maTN", referencedColumnName = "tenDangNhap")
+    @JoinColumn(name = "matn", referencedColumnName = "tenDangNhap", nullable = true)
     private TaiKhoan taiKhoan;
 
     @Column(name = "tenThanh")
@@ -43,8 +43,7 @@ public class ThieuNhi {
 
     @Column(name = "ngaySinh")
     @NotNull(message = "Ngày sinh không được để trống")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "Asia/Ho_Chi_Minh")
     private Date ngaySinh;
 
     @Column(name = "gioiTinh")
@@ -54,8 +53,7 @@ public class ThieuNhi {
 
     @Column(name = "ngayRuaToi")
     @Past(message = "Ngày rửa tội phải nhỏ hơn ngày hiện tại")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayRuaToi;
 
     @Column(name = "noiRuaToi")
@@ -63,8 +61,7 @@ public class ThieuNhi {
 
     @Column(name = "ngayRuocLe")
     @PastOrPresent(message = "Ngày rước lễ phải nhỏ hơn hoặc bằng ngày hiện tại")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayRuocLe;
 
     @Column(name = "noiRuocLe")
@@ -72,8 +69,7 @@ public class ThieuNhi {
 
     @Column(name = "ngayThemSuc")
     @PastOrPresent(message = "Ngày thêm sức phải nhỏ hơn hoặc bằng ngày hiện tại")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayThemSuc;
 
     @Column(name = "noiThemSuc")
@@ -81,8 +77,7 @@ public class ThieuNhi {
 
     @Column(name = "ngayBaoDong")
     @PastOrPresent(message = "Ngày bao đồng phải nhỏ hơn hoặc bằng ngày hiện tại")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "Asia/Ho_Chi_Minh")
     private Date ngayBaoDong;
 
     @Column(name = "noiBaoDong")
@@ -110,5 +105,10 @@ public class ThieuNhi {
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Trình độ không được để trống")
     private TrinhDo trinhDo;
+
+    @Column(name = "trangThai")
+    @Enumerated(EnumType.STRING)
+    @NotNull(message = "Trạng tha không được để trống")
+    private TrangThaiHocVu trangThai;
 
 }

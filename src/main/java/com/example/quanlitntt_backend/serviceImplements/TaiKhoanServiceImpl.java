@@ -28,6 +28,12 @@ public class TaiKhoanServiceImpl implements TaiKhoanService {
         TaiKhoan tk = new TaiKhoan();
 
         tk.setTenDangNhap(tenDangNhap);
+
+        if (vaiTro.equals(VaiTro.THIEUNHI)) {
+            tk.setMatKhau(hashPassword(tenDangNhap));
+            tk.setVaiTro(vaiTro);
+        }
+
         tk.setMatKhau(hashPassword("tnttgxbung2013"));
         tk.setVaiTro(vaiTro);
 

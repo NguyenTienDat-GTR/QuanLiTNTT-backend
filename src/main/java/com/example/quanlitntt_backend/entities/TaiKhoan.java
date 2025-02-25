@@ -1,6 +1,7 @@
 package com.example.quanlitntt_backend.entities;
 
 import com.example.quanlitntt_backend.entities.enums.VaiTro;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -23,8 +24,10 @@ public class TaiKhoan {
     private HuynhTruong huynhTruong;
 
 
-    @OneToOne(mappedBy = "taiKhoan", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "taiKhoan", cascade = CascadeType.ALL, optional = true)
+    @JsonIgnore
     private ThieuNhi thieuNhi;
+
 
     @Column(name = "matKhau")
     @NotNull(message = "Mật khẩu không được để trống")

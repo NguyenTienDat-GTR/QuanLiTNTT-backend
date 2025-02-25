@@ -1,6 +1,7 @@
 package com.example.quanlitntt_backend.dto;
 
 import com.example.quanlitntt_backend.entities.enums.GioiTinh;
+import com.example.quanlitntt_backend.entities.enums.TrangThaiHocVu;
 import com.example.quanlitntt_backend.entities.enums.TrinhDo;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
@@ -19,8 +20,6 @@ import java.util.Date;
 public class ThieuNhiDto {
     private String maTN;
 
-    private String tenDangNhap;
-
     @NotNull(message = "Tên thánh không được để trống")
     private String tenThanh;
 
@@ -32,7 +31,6 @@ public class ThieuNhiDto {
 
     @NotNull(message = "Ngày sinh không được để trống")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
     private Date ngaySinh;
 
     @NotNull(message = "Giới tính không được để trống")
@@ -40,28 +38,24 @@ public class ThieuNhiDto {
 
     @Past(message = "Ngày rửa tội phải nhỏ hơn ngày hiện tại")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
     private Date ngayRuaToi;
 
     private String noiRuaToi;
 
     @PastOrPresent(message = "Ngày rước lễ phải nhỏ hơn hoặc bằng ngày hiện tại")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
     private Date ngayRuocLe;
 
     private String noiRuocLe;
 
     @PastOrPresent(message = "Ngày thêm sức phải nhỏ hơn hoặc bằng ngày hiện tại")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
     private Date ngayThemSuc;
 
     private String noiThemSuc;
 
     @PastOrPresent(message = "Ngày bao đồng phải nhỏ hơn hoặc bằng ngày hiện tại")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
-//    @JsonDeserialize(using = LocalDateDeserializer.class)
     private Date ngayBaoDong;
 
     private String noiBaoDong;
@@ -81,4 +75,7 @@ public class ThieuNhiDto {
 
     @NotNull(message = "Trình độ không được để trống")
     private TrinhDo trinhDo;
+
+    @NotNull(message = "Trạng tha không được để trống")
+    private TrangThaiHocVu trangThai;
 }

@@ -80,7 +80,6 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
             Date ngaySinhFormatted = DateUtil.convertToDateFormat(huynhTruongDTO.getNgaySinh());
 
             setValueForHuynhTruong(huynhTruongDTO, ht, ngaySinhFormatted);
-            ht.setHoatDong(huynhTruongDTO.isHoatDong());
 
             return huynhTruongRepository.save(ht);
         }
