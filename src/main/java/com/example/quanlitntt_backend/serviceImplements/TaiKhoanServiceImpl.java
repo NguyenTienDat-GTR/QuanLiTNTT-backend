@@ -36,6 +36,7 @@ public class TaiKhoanServiceImpl implements TaiKhoanService {
 
         tk.setMatKhau(hashPassword("tnttgxbung2013"));
         tk.setVaiTro(vaiTro);
+        tk.setHoatDong(true);
 
         return taiKhoanRepository.save(tk);
 
@@ -53,7 +54,11 @@ public class TaiKhoanServiceImpl implements TaiKhoanService {
 
     @Override
     public void deleteTaiKhoan(String tenDangNhap) {
-        taiKhoanRepository.deleteById(tenDangNhap);
+
+        taiKhoanRepository.findById(tenDangNhap).ifPresent(taiKhoan -> {
+            taiKhoan.setHoatDong(false);
+            taiKhoanRepository.save(taiKhoan);
+        });
     }
 
     @Override

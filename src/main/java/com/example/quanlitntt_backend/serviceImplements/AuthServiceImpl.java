@@ -2,6 +2,7 @@ package com.example.quanlitntt_backend.serviceImplements;
 
 import com.example.quanlitntt_backend.entities.TaiKhoan;
 import com.example.quanlitntt_backend.entities.TaiKhoanDetail;
+import com.example.quanlitntt_backend.repositories.TaiKhoanRepository;
 import com.example.quanlitntt_backend.services.AuthService;
 import com.example.quanlitntt_backend.services.TaiKhoanDetailService;
 import com.example.quanlitntt_backend.utils.JwtUtil;
@@ -9,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Optional;
 
 
 @Service
@@ -22,6 +25,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
 
     @Override
     public String DangNhap(String tenDangNhap, String matKhau) {

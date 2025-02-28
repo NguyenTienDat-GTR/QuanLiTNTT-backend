@@ -194,6 +194,12 @@ public class ThieuNhiServiceImpl implements ThieuNhiService {
 
         tn.get().setTrangThai(TrangThaiHocVu.NGHIHOC);
         thieuNhiRepository.save(tn.get());
+
+        taiKhoanService.getTaiKhoan(maTN).ifPresent(taiKhoan -> {
+            taiKhoan.setHoatDong(false);
+        });
+
+
     }
 
     @Override
@@ -208,6 +214,10 @@ public class ThieuNhiServiceImpl implements ThieuNhiService {
 
         tn.get().setTrangThai(TrangThaiHocVu.DANGHOC);
         thieuNhiRepository.save(tn.get());
+
+        taiKhoanService.getTaiKhoan(maTN).ifPresent(taiKhoan -> {
+            taiKhoan.setHoatDong(true);
+        });
     }
 
     private String getStringCellValue(Row row, int index) {

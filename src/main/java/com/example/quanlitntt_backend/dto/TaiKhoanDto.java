@@ -20,4 +20,6 @@ public class TaiKhoanDto {
 
     @NotNull(message = "Vai trò không được để trống")
     private VaiTro vaiTro;
+
+    private boolean isHoatDong;
 }

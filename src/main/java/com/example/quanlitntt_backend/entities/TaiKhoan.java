@@ -39,4 +39,7 @@ public class TaiKhoan {
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Vai trò không được để trống")
     private VaiTro vaiTro;
+
+    @Column(name= "HoatDong")
+    private boolean isHoatDong;
 }

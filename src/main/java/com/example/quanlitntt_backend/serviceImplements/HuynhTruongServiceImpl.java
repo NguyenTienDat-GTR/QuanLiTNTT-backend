@@ -103,6 +103,10 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
 
         ht.get().setHoatDong(false);
         huynhTruongRepository.save(ht.get());
+        taiKhoanRepository.findById(maHT).ifPresent(taiKhoan -> {
+            taiKhoan.setHoatDong(false);
+            taiKhoanRepository.save(taiKhoan);
+        });
     }
 
     @Override
@@ -239,6 +243,11 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
 
         ht.get().setHoatDong(true);
         huynhTruongRepository.save(ht.get());
+
+        taiKhoanRepository.findById(maHT).ifPresent(taiKhoan -> {
+            taiKhoan.setHoatDong(true);
+            taiKhoanRepository.save(taiKhoan);
+        });
     }
 
 
