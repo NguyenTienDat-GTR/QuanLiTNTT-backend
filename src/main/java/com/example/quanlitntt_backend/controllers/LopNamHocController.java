@@ -1,9 +1,7 @@
 package com.example.quanlitntt_backend.controllers;
 
-import com.example.quanlitntt_backend.entities.HuynhTruong;
-import com.example.quanlitntt_backend.entities.Lop;
-import com.example.quanlitntt_backend.entities.LopNamHoc;
-import com.example.quanlitntt_backend.entities.NamHoc;
+import com.example.quanlitntt_backend.dto.ThieuNhiDto;
+import com.example.quanlitntt_backend.entities.*;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
 import com.example.quanlitntt_backend.serviceImplements.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +18,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
-@RequestMapping("api/thong-tin-lop")
+@RequestMapping("/api/thong-tin-lop")
 public class LopNamHocController {
 
     @Autowired
@@ -180,11 +178,11 @@ public class LopNamHocController {
         }
     }
 
-    @PostMapping("/add-thieuNhi-lop")
+    @PostMapping("/add-thieuNhi-lop-fromFile")
     @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
-    public ResponseEntity<?> addThieuNhiVaoLop(@RequestParam("file") MultipartFile file,
-                                               @RequestParam String maLop,
-                                               @RequestParam String namHoc) {
+    public ResponseEntity<?> addThieuNhiVaoLopFromFile(@RequestParam("file") MultipartFile file,
+                                                       @RequestParam String maLop,
+                                                       @RequestParam String namHoc) {
 
         try {
             CompletableFuture<List<String>> future = thieuNhiService.addThieuNhiFromFileExcel(file);
@@ -218,7 +216,42 @@ public class LopNamHocController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi thêm thiếu nhi "  + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi thêm thiếu nhi " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/add-thieuNhi-lop")
+    @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
+    public ResponseEntity<?> addThieuNhiVaoLop(@RequestBody List<ThieuNhiDto> thieuNhiDtos,
+                                               @RequestParam String maLop,
+                                               @RequestParam String namHoc) {
+        try {
+            if (lopService.getLopByMaLop(maLop).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp với mã: " + maLop);
+            }
+
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            }
+
+            List<String> addedThieuNhis = new ArrayList<>();
+            List<String> failedThieuNhis = new ArrayList<>();
+
+            for (ThieuNhiDto dto : thieuNhiDtos) {
+                try {
+                    ThieuNhi tn = thieuNhiService.addThieuNhi(dto);
+                    lopNamHocService.addThieuNhiVaoLop(tn.getMaTN(), maLop, namHoc);
+                    addedThieuNhis.add(tn.getMaTN());
+                } catch (RuntimeException e) {
+                    failedThieuNhis.add("Lỗi " + e.getMessage());
+                }
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body("Đã thêm thiếu nhi vào lớp thành công: " + String.join(", ", addedThieuNhis));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi thêm thiếu nhi " + e.getMessage());
         }
     }
 
