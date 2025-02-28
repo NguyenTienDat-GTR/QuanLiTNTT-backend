@@ -149,7 +149,12 @@ public class LopNamHocServiceImpl implements LopNamHocService {
 
     @Override
     public List<HuynhTruong> layHuynhTruongCuaLop(String maLop, String namHoc) {
-        return lopNamHocRepository.layHuynhTruongCuaLopNamHoc(maLop,namHoc);
+        return lopNamHocRepository.layHuynhTruongCuaLopNamHoc(maLop, namHoc);
+    }
+
+    @Override
+    public List<Lop> layLopTheoNganhVaNam(String maNganh, String namHoc) {
+        return lopNamHocRepository.layLopTheoNganhVaNamHoc(maNganh, namHoc);
     }
 
 

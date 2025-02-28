@@ -151,6 +151,31 @@ public class LopNamHocController {
         }
     }
 
+    @GetMapping("get-lop-nganh")
+    @PreAuthorize("isAuthenticated() and !hasRole('THIEUNHI')")
+    public ResponseEntity<?> layLopTheoNganhVaNam(@RequestParam String maNganh,
+                                                  @RequestParam String namHoc) {
+        try {
+            if (nganhService.getNganhById(maNganh).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy ngành với mã: " + maNganh);
+            }
+
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            }
+
+            if (lopNamHocService.layLopTheoNganhVaNam(maNganh, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp nào. ");
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body(lopNamHocService.layLopTheoNganhVaNam(maNganh, namHoc));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi lấy lớp của ngành: " + e.getMessage());
+        }
+    }
 
 }
 
