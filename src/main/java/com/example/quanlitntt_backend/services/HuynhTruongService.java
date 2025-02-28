@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public interface HuynhTruongService {
     public HuynhTruong addHuynhTruong(HuynhTruongDto huynhTruongDTO);
@@ -33,7 +34,7 @@ public interface HuynhTruongService {
     Page<HuynhTruong> getAllHuynhTruong(Pageable pageable, String sortBy);
 
     // them Huynh truong tu file excel
-    public void addHuynhTruongFromExcel(MultipartFile file);
+    public CompletableFuture<Void> addHuynhTruongFromExcel(MultipartFile file);
 
     public void activeHuynhTruong(String maHT);
 

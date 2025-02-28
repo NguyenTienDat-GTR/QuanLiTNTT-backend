@@ -15,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,6 +23,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.example.quanlitntt_backend.utils.ExcelUtil.getDateCellValue;
 
@@ -141,25 +145,52 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
         return cell.getStringCellValue().trim();
     }
 
-    @Override
-    public void addHuynhTruongFromExcel(MultipartFile file) {
+    @Async("asyncExecutor")
+    public CompletableFuture<Void> addHuynhTruongFromExcel(MultipartFile file) {
         try {
             Workbook workbook = new XSSFWorkbook(file.getInputStream());
-            Sheet sheet = workbook.getSheetAt(0); // Lấy sheet đầu tiên
-            List<HuynhTruongDto> danhSachHuynhTruong = new ArrayList<>();
-
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            Sheet sheet = workbook.getSheetAt(0);
+            List<Row> rows = new ArrayList<>();
 
             for (Row row : sheet) {
                 if (row.getRowNum() == 0) continue; // Bỏ qua dòng tiêu đề
+                rows.add(row);
+            }
+            workbook.close();
 
+            // Chia danh sách hàng thành các nhóm nhỏ để xử lý song song
+            int batchSize = 100; // Số hàng mỗi nhóm
+            List<List<Row>> partitions = IntStream.range(0, (rows.size() + batchSize - 1) / batchSize)
+                    .mapToObj(i -> rows.subList(i * batchSize, Math.min(rows.size(), (i + 1) * batchSize)))
+                    .toList();
+
+            // Xử lý song song
+            List<CompletableFuture<Void>> futures = partitions.stream()
+                    .map(this::processBatch)
+                    .toList();
+
+            // Chờ tất cả tác vụ hoàn thành
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            return CompletableFuture.completedFuture(null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return CompletableFuture.failedFuture(new RuntimeException("Lỗi khi đọc file Excel: " + e.getMessage()));
+        }
+    }
+
+    @Async("asyncExecutor")
+    public CompletableFuture<Void> processBatch(List<Row> rows) {
+        List<HuynhTruongDto> danhSachHuynhTruong = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+
+        for (Row row : rows) {
+            try {
                 HuynhTruongDto dto = new HuynhTruongDto();
-//                dto.setMaHT(getStringCellValue(row, 0).trim());
                 dto.setTenThanh(getStringCellValue(row, 0).trim());
                 dto.setHo(getStringCellValue(row, 1).trim());
                 dto.setTen(getStringCellValue(row, 2).trim());
 
-                // Xử lý ngày sinh
                 String ngaySinhStr = getDateCellValue(row, 3).trim();
                 if (ngaySinhStr.isEmpty()) {
                     throw new IllegalArgumentException("Ngày sinh không được để trống tại dòng " + row.getRowNum());
@@ -168,46 +199,31 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
 
                 dto.setNgayBonMang(getStringCellValue(row, 4).trim());
 
-                // Xử lý giới tính
                 String gioiTinhStr = getStringCellValue(row, 5).trim().toUpperCase();
-                try {
-                    dto.setGioiTinh(GioiTinh.valueOf(gioiTinhStr));
-                } catch (IllegalArgumentException ex) {
-                    throw new IllegalArgumentException("Giới tính không hợp lệ tại dòng " + row.getRowNum());
-                }
+                dto.setGioiTinh(GioiTinh.valueOf(gioiTinhStr));
 
                 dto.setHinhAnh(getStringCellValue(row, 6).trim());
                 dto.setSoDienThoai(getStringCellValue(row, 7).trim());
                 dto.setEmail(getStringCellValue(row, 8).trim());
 
-                // Xử lý cấp sao
                 String capSaoStr = getStringCellValue(row, 9).trim().toUpperCase();
-                try {
-                    dto.setCapSao(CapSao.valueOf(capSaoStr));
-                } catch (IllegalArgumentException ex) {
-                    throw new IllegalArgumentException("Cấp sao không hợp lệ tại dòng " + row.getRowNum());
-                }
+                dto.setCapSao(CapSao.valueOf(capSaoStr));
 
-//                // Xử lý trạng thái hoạt động
-//                Cell cell = row.getCell(11);
-//                if (cell == null || cell.getCellType() != CellType.BOOLEAN) {
-//                    throw new IllegalArgumentException("Trạng thái hoạt động không hợp lệ tại dòng " + row.getRowNum());
-//                }
                 dto.setHoatDong(true);
-
                 danhSachHuynhTruong.add(dto);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-            // Lưu vào database
-            danhSachHuynhTruong.forEach(dto -> {
-                huynhTruongRepository.save(ExcelUtil.convertFileHuynhTruongToEntity(dto));
-            });
-
-            workbook.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Lỗi khi đọc file Excel: " + e.getMessage());
         }
+
+        // Lưu danh sách vào database
+        if (!danhSachHuynhTruong.isEmpty()) {
+            huynhTruongRepository.saveAll(danhSachHuynhTruong.stream()
+                    .map(ExcelUtil::convertFileHuynhTruongToEntity)
+                    .collect(Collectors.toList()));
+        }
+
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override

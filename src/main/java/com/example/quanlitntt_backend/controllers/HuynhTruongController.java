@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 
 @RequestMapping("/api/huynhtruong")
 @RestController
@@ -162,13 +163,15 @@ public class HuynhTruongController {
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
     public ResponseEntity<?> addHuynhTruongFromExcel(@RequestParam("file") MultipartFile file) {
         try {
-            huynhTruongService.addHuynhTruongFromExcel(file);
+            CompletableFuture<Void> future = huynhTruongService.addHuynhTruongFromExcel(file);
+            future.join(); // Đợi cho đến khi tất cả dữ liệu được xử lý xong
             return ResponseEntity.status(HttpStatus.CREATED).body("Thêm Huynh Trưởng từ file Excel thành công");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi thêm Huynh Trưởng từ file Excel: " + e.getMessage());
         }
     }
+
 
     @GetMapping("/getByMa")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
