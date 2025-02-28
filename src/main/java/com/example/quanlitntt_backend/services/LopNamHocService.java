@@ -22,4 +22,5 @@ public interface LopNamHocService {
     public List<HuynhTruong> layHuynhTruongCuaLop(String maLop, String namHoc);
 
     public List<Lop> layLopTheoNganhVaNam(String maNganh, String namHoc);
+
 }

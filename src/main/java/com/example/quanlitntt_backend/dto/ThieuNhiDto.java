@@ -20,7 +20,6 @@ import java.util.Date;
 public class ThieuNhiDto {
     private String maTN;
 
-    @NotNull(message = "Tên thánh không được để trống")
     private String tenThanh;
 
     @NotNull(message = "Họ không được để trống")

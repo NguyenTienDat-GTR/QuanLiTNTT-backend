@@ -30,7 +30,6 @@ public class ThieuNhi {
     private TaiKhoan taiKhoan;
 
     @Column(name = "tenThanh")
-    @NotNull(message = "Tên thánh không được để trống")
     private String tenThanh;
 
     @Column(name = "ho")

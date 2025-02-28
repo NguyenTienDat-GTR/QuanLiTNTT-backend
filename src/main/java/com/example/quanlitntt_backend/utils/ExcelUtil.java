@@ -6,14 +6,23 @@ import com.example.quanlitntt_backend.entities.HuynhTruong;
 import com.example.quanlitntt_backend.entities.ThieuNhi;
 import com.example.quanlitntt_backend.repositories.ThieuNhiRepository;
 import org.apache.poi.ss.usermodel.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
+@Component
 public class ExcelUtil {
 
-    private static GenerateMa generateMa = new GenerateMa();
+    private static final GenerateMa generateMa = new GenerateMa();
 
     private static ThieuNhiRepository thieuNhiRepository;
+
+    @Autowired
+    public void setThieuNhiRepository(ThieuNhiRepository repository) {
+        thieuNhiRepository = repository;
+    }
 
     public static HuynhTruong convertFileHuynhTruongToEntity(HuynhTruongDto dto) {
         HuynhTruong entity = new HuynhTruong();
@@ -39,9 +48,12 @@ public class ExcelUtil {
     }
 
     public static ThieuNhi convertFileThieuNhiToEntity(ThieuNhiDto dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("ThieuNhiDto không được null");
+        }
+
         ThieuNhi tn = new ThieuNhi();
 
-        generateMa.generateMaThieuNhi(dto.getNgaySinh(), dto.getTenThanh(), dto.getHo(), dto.getTen(), thieuNhiRepository::existsById);
         tn.setTenThanh(dto.getTenThanh());
         tn.setHo(dto.getHo());
         tn.setTen(dto.getTen());
@@ -61,9 +73,22 @@ public class ExcelUtil {
         tn.setSoDienThoaiMe(dto.getSoDienThoaiMe());
         tn.setSoDienThoaiCaNhan(dto.getSoDienThoaiCaNhan());
         tn.setTrinhDo(dto.getTrinhDo());
+        tn.setTrangThai(dto.getTrangThai());
         tn.setTaiKhoan(null);
+
+        // Kiểm tra các giá trị quan trọng trước khi tạo mã thiếu nhi
+        if (dto.getNgaySinh() == null || dto.getTenThanh() == null || dto.getHo() == null || dto.getTen() == null) {
+            throw new RuntimeException("Thiếu dữ liệu bắt buộc để tạo mã thiếu nhi");
+        }
+
+        // Tạo mã thiếu nhi
+        String maTN = generateMa.generateMaThieuNhi(
+                dto.getNgaySinh(), dto.getTenThanh(), dto.getHo(), dto.getTen());
+        tn.setMaTN(maTN);
+
         return tn;
     }
+
 
     public static boolean isCellDateFormatted(Cell cell) {
         if (cell == null || cell.getCellType() != CellType.NUMERIC) {
@@ -90,14 +115,17 @@ public class ExcelUtil {
     public static String getDateCellValue(Row row, int cellIndex) {
         Cell cell = row.getCell(cellIndex);
         if (cell == null) {
-            return "";
+            return null;
         }
 
         if (isCellDateFormatted(cell)) {
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
             return sdf.format(cell.getDateCellValue());
-        } else {
-            return cell.toString().trim(); // Nếu không phải ngày thì trả về chuỗi nguyên bản
+        } else if (cell.getCellType() == CellType.STRING) {
+            return cell.getStringCellValue().trim();
         }
+
+        return null;
     }
+
 }

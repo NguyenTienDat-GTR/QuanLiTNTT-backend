@@ -1,7 +1,6 @@
 package com.example.quanlitntt_backend.serviceImplements;
 
 import com.example.quanlitntt_backend.dto.ThieuNhiDto;
-import com.example.quanlitntt_backend.entities.HuynhTruong;
 import com.example.quanlitntt_backend.entities.ThieuNhi;
 import com.example.quanlitntt_backend.entities.enums.GioiTinh;
 import com.example.quanlitntt_backend.entities.enums.TrangThaiHocVu;
@@ -17,16 +16,19 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
-import static com.example.quanlitntt_backend.utils.ExcelUtil.getDateCellValue;
 
 @Service
 public class ThieuNhiServiceImpl implements ThieuNhiService {
@@ -129,7 +131,7 @@ public class ThieuNhiServiceImpl implements ThieuNhiService {
 
         Date ngaySinh = DateUtil.convertToDateFormat(thieuNhiDto.getNgaySinh());
 
-        String maTN = generateMa.generateMaThieuNhi(ngaySinh, thieuNhiDto.getTenThanh(), thieuNhiDto.getHo(), thieuNhiDto.getTen(), thieuNhiRepository::existsById);
+        String maTN = generateMa.generateMaThieuNhi(ngaySinh, thieuNhiDto.getTenThanh(), thieuNhiDto.getHo(), thieuNhiDto.getTen());
 
         tn.setMaTN(maTN);
         setValueForThieuNhi(thieuNhiDto, tn);
@@ -210,101 +212,103 @@ public class ThieuNhiServiceImpl implements ThieuNhiService {
         thieuNhiRepository.save(tn.get());
     }
 
-    private String getStringCellValue(Row row, int columnIndex) {
-        Cell cell = row.getCell(columnIndex);
-        if (cell == null) {
-            return "";
-        }
-        cell.setCellType(CellType.STRING);
-        return cell.getStringCellValue().trim();
+    private String getStringCellValue(Row row, int index) {
+        Cell cell = row.getCell(index, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+        return (cell != null && cell.getCellType() == CellType.STRING) ? cell.getStringCellValue().trim() : null;
+    }
+
+    private <T extends Enum<T>> T parseEnum(Class<T> enumType, String value) {
+        return (value != null) ? Enum.valueOf(enumType, value.trim().toUpperCase()) : null;
+    }
+
+    private Date parseDate(SimpleDateFormat dateFormat, String dateStr) throws ParseException {
+        return (dateStr != null) ? dateFormat.parse(dateStr) : null;
     }
 
     @Override
-    public void addThieuNhiFromFileExcel(MultipartFile file) {
-        try {
-            Workbook workbook = new XSSFWorkbook(file.getInputStream());
-            Sheet sheet = workbook.getSheetAt(0); // lấy sheet đầu tiên
-
+    @Async
+    public CompletableFuture<List<String>> addThieuNhiFromFileExcel(MultipartFile file) {
+        return CompletableFuture.supplyAsync(() -> {
             List<ThieuNhiDto> danhSachThieuNhi = new ArrayList<>();
-
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
-            for (Row row : sheet) {
-                if (row.getRowNum() == 0) continue; //bỏ qua dòng tiêu ề
+            try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
+                Sheet sheet = workbook.getSheetAt(0);
 
-                ThieuNhiDto thieuNhiDto = new ThieuNhiDto();
+                for (Row row : sheet) {
+                    if (row.getRowNum() == 0) continue; // Bỏ qua dòng tiêu đề
+                    try {
+                        ThieuNhiDto thieuNhiDto = new ThieuNhiDto();
 
-                thieuNhiDto.setTenThanh(getStringCellValue(row, 0).trim());
-                thieuNhiDto.setHo(getStringCellValue(row, 1).trim());
-                thieuNhiDto.setTen(getStringCellValue(row, 2).trim());
+                        String tenThanh = getStringCellValue(row, 0);
+                        String ho = getStringCellValue(row, 1);
+                        String ten = getStringCellValue(row, 2);
+                        String ngaySinhStr = ExcelUtil.getDateCellValue(row, 4);
 
-                // Xử lý giới tính
-                String gioiTinhStr = getStringCellValue(row, 3).trim().toUpperCase();
-                try {
-                    thieuNhiDto.setGioiTinh(GioiTinh.valueOf(gioiTinhStr));
-                } catch (IllegalArgumentException ex) {
-                    throw new IllegalArgumentException("Giới tính không hợp lệ tại dòng " + row.getRowNum());
+                        // Kiểm tra các trường bắt buộc
+                        if (tenThanh == null || ho == null || ten == null || ngaySinhStr == null) {
+                            throw new RuntimeException("Dữ liệu thiếu tại dòng " + (row.getRowNum() + 1));
+                        }
+
+                        thieuNhiDto.setTenThanh(tenThanh);
+                        thieuNhiDto.setHo(ho);
+                        thieuNhiDto.setTen(ten);
+                        thieuNhiDto.setNgaySinh(dateFormat.parse(ngaySinhStr));
+
+                        // Các trường không bắt buộc, nếu rỗng thì set null
+                        thieuNhiDto.setGioiTinh(parseEnum(GioiTinh.class, getStringCellValue(row, 3)));
+                        thieuNhiDto.setNgayRuaToi(parseDate(dateFormat, ExcelUtil.getDateCellValue(row, 5)));
+                        thieuNhiDto.setNoiRuaToi(getStringCellValue(row, 6));
+                        thieuNhiDto.setHoTenCha(getStringCellValue(row, 7));
+                        thieuNhiDto.setHoTenMe(getStringCellValue(row, 8));
+                        thieuNhiDto.setSoDienThoaiCaNhan(getStringCellValue(row, 9));
+                        thieuNhiDto.setSoDienThoaiCha(getStringCellValue(row, 10));
+                        thieuNhiDto.setSoDienThoaiMe(getStringCellValue(row, 11));
+                        thieuNhiDto.setNgayRuocLe(parseDate(dateFormat, ExcelUtil.getDateCellValue(row, 12)));
+                        thieuNhiDto.setNoiRuocLe(getStringCellValue(row, 13));
+                        thieuNhiDto.setNgayThemSuc(parseDate(dateFormat, ExcelUtil.getDateCellValue(row, 14)));
+                        thieuNhiDto.setNoiThemSuc(getStringCellValue(row, 15));
+                        thieuNhiDto.setNgayBaoDong(parseDate(dateFormat, ExcelUtil.getDateCellValue(row, 16)));
+                        thieuNhiDto.setNoiBaoDong(getStringCellValue(row, 17));
+                        thieuNhiDto.setTrinhDo(parseEnum(TrinhDo.class, getStringCellValue(row, 18)));
+                        thieuNhiDto.setTrangThai(parseEnum(TrangThaiHocVu.class, getStringCellValue(row, 19)));
+
+                        danhSachThieuNhi.add(thieuNhiDto);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Lỗi xử lý dòng " + (row.getRowNum() + 1) + ": " + e.getMessage());
+                    }
                 }
 
-                // Xử lý ngày sinh
-                String ngaySinhStr = getDateCellValue(row, 4).trim();
-                if (ngaySinhStr.isEmpty()) {
-                    throw new IllegalArgumentException("Ngày sinh không được để trống tại dòng " + row.getRowNum());
-                }
-                thieuNhiDto.setNgaySinh(dateFormat.parse(ngaySinhStr));
-
-                String ngayRuaToi = getDateCellValue(row, 5).trim();
-                thieuNhiDto.setNgayRuaToi((dateFormat.parse(ngayRuaToi)));
-
-                thieuNhiDto.setNoiRuaToi(getStringCellValue(row, 6).trim());
-
-                thieuNhiDto.setHoTenCha(getStringCellValue(row, 7).trim());
-                thieuNhiDto.setHoTenMe(getStringCellValue(row, 8).trim());
-                thieuNhiDto.setSoDienThoaiCaNhan((getStringCellValue(row, 9).trim()));
-                thieuNhiDto.setSoDienThoaiCha((getStringCellValue(row, 10).trim()));
-                thieuNhiDto.setSoDienThoaiMe((getStringCellValue(row, 11).trim()));
-
-                String ngayRuocLe = getDateCellValue(row, 12).trim();
-                thieuNhiDto.setNgayRuocLe((dateFormat.parse(ngayRuocLe)));
-
-                thieuNhiDto.setNoiRuocLe(getStringCellValue(row, 13).trim());
-
-                String ngayThemSuc = getDateCellValue(row, 14).trim();
-                thieuNhiDto.setNgayThemSuc(dateFormat.parse(ngayThemSuc));
-
-                thieuNhiDto.setNoiThemSuc(getStringCellValue(row, 15).trim());
-
-                String ngayBaoDong = getDateCellValue(row, 16).trim();
-                thieuNhiDto.setNgayBaoDong(dateFormat.parse(ngayBaoDong));
-
-                thieuNhiDto.setNoiBaoDong(getStringCellValue(row, 17));
-
-                String trinhDo = getStringCellValue(row, 18).trim().toUpperCase();
-                try {
-                    thieuNhiDto.setTrinhDo(TrinhDo.valueOf(trinhDo));
-                } catch (IllegalArgumentException ex) {
-                    throw new IllegalArgumentException("Trình độ không hợp lệ tại dòng " + row.getRowNum());
-                }
-
-                String trangThai = getStringCellValue(row, 19).trim().toUpperCase();
-                try {
-                    thieuNhiDto.setTrangThai(TrangThaiHocVu.valueOf(trangThai));
-                } catch (IllegalArgumentException ex) {
-                    throw new IllegalArgumentException("Trạng thái không hợp lệ tại dòng " + row.getRowNum());
-                }
-
-                danhSachThieuNhi.add(thieuNhiDto);
+            } catch (Exception e) {
+                throw new RuntimeException("Lỗi khi đọc file Excel: " + e.getMessage());
             }
 
-            danhSachThieuNhi.forEach(thieunhi -> {
-                thieuNhiRepository.save(ExcelUtil.convertFileThieuNhiToEntity(thieunhi));
-            });
-
-            workbook.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Lỗi khi đọc file excel " + e.getMessage());
-        }
+            return danhSachThieuNhi;
+        }).thenComposeAsync(this::saveBatchAndReturnMaAsync);
     }
+
+
+    @Async
+    @Transactional
+    public CompletableFuture<List<String>> saveBatchAndReturnMaAsync(List<ThieuNhiDto> danhSachThieuNhi) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<String> danhSachMaTN = new ArrayList<>();
+            int batchSize = 100;
+
+            for (int i = 0; i < danhSachThieuNhi.size(); i += batchSize) {
+                List<ThieuNhiDto> batch = danhSachThieuNhi.subList(i, Math.min(i + batchSize, danhSachThieuNhi.size()));
+
+                List<ThieuNhi> entities = batch.stream()
+                        .map(ExcelUtil::convertFileThieuNhiToEntity)
+                        .toList();
+
+                List<ThieuNhi> savedEntities = thieuNhiRepository.saveAll(entities);
+                danhSachMaTN.addAll(savedEntities.stream().map(ThieuNhi::getMaTN).toList());
+            }
+
+            return danhSachMaTN;
+        });
+    }
+
+
 }

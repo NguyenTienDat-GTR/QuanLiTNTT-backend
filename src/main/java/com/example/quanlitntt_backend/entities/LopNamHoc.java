@@ -38,9 +38,16 @@ public class LopNamHoc {
     )
     private List<HuynhTruong> danhSachHuynhTruong = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "maTN")
-    protected ThieuNhi thieuNhi;
+    @ManyToMany
+    @JoinTable(
+            name = "LopNamHoc_ThieuNhi",
+            joinColumns = {
+                    @JoinColumn(name = "maLop", referencedColumnName = "maLop"),
+                    @JoinColumn(name = "namHoc", referencedColumnName = "namHoc")
+            },
+            inverseJoinColumns = @JoinColumn(name = "maTN")
+    )
+    private List<ThieuNhi> danhSachThieuNhi = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "maBangDiemDanh")

@@ -11,10 +11,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RestController
 @RequestMapping("api/thong-tin-lop")
@@ -75,7 +78,7 @@ public class LopNamHocController {
         }
     }
 
-    @PostMapping("add-huynhTruong-lop")
+    @PostMapping("/add-huynhTruong-lop")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','TRUONGNGANH')")
     public ResponseEntity<?> addHuynhTruongVaoLop(@RequestParam String maLop,
                                                   @RequestParam String namHoc,
@@ -151,7 +154,7 @@ public class LopNamHocController {
         }
     }
 
-    @GetMapping("get-lop-nganh")
+    @GetMapping("/get-lop-nganh")
     @PreAuthorize("isAuthenticated() and !hasRole('THIEUNHI')")
     public ResponseEntity<?> layLopTheoNganhVaNam(@RequestParam String maNganh,
                                                   @RequestParam String namHoc) {
@@ -177,10 +180,50 @@ public class LopNamHocController {
         }
     }
 
+    @PostMapping("/add-thieuNhi-lop")
+    @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
+    public ResponseEntity<?> addThieuNhiVaoLop(@RequestParam("file") MultipartFile file,
+                                               @RequestParam String maLop,
+                                               @RequestParam String namHoc) {
+
+        try {
+            CompletableFuture<List<String>> future = thieuNhiService.addThieuNhiFromFileExcel(file);
+            System.out.println("controller" + future.get());
+            List<String> maThieuNhiList = future.get();
+
+            if (lopService.getLopByMaLop(maLop).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop);
+
+            if (namHocService.getNamHocById(namHoc).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học " + namHoc);
+
+            LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
+
+            if (lopNamHocService.getLopNamHocById(key).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+
+            List<String> addedThieuNhis = new ArrayList<>();
+            List<String> failedThieuNhis = new ArrayList<>();
+
+            for (String maTN : maThieuNhiList) {
+                try {
+                    lopNamHocService.addThieuNhiVaoLop(maTN, maLop, namHoc);
+                    addedThieuNhis.add(maTN);
+                } catch (RuntimeException e) {
+                    failedThieuNhis.add(maTN + ": " + e.getMessage());
+                }
+            }
+
+            return ResponseEntity.status(HttpStatus.OK).body("Đã thêm thiếu nhi vào lớp thành công: " + String.join(", ", addedThieuNhis));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi thêm thiếu nhi "  + e.getMessage());
+        }
+    }
+
 }
 
 
-//    @PostMapping("add-thieuNhi-lop-all")
-//    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
 
 

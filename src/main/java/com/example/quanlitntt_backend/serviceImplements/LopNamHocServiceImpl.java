@@ -106,9 +106,12 @@ public class LopNamHocServiceImpl implements LopNamHocService {
 
     @Override
     public void addThieuNhiVaoLop(String maTN, String maLop, String namHoc) {
-        Optional<ThieuNhi> thieuNhi = thieuNhiRepository.findById(maTN);
-        if (thieuNhi.isEmpty())
+        Optional<ThieuNhi> thieuNhiOpt = thieuNhiRepository.findById(maTN);
+        if (thieuNhiOpt.isEmpty())
             throw new RuntimeException("Không tìm thấy thiếu nhi với mã " + maTN);
+
+        //kiểm tra thiếu nhi đã có trong lớp này chưa
+        ThieuNhi thieuNhi = thieuNhiOpt.get();
 
         LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
 
@@ -117,7 +120,14 @@ public class LopNamHocServiceImpl implements LopNamHocService {
         if (lopNamHoc.isEmpty())
             throw new RuntimeException("Không tìm thấy lớp " + maLop + "trong năm học " + namHoc);
 
-        lopNamHoc.get().setThieuNhi(thieuNhi.get());
+        if (lopNamHocRepository.timThieuNhiTheoLopNamHoc(maTN, maLop, namHoc).isPresent()) {
+            throw new RuntimeException("Thiếu nhi với mã " + maTN + " đã có trong lớp này");
+        }
+
+        if (lopNamHocRepository.timThieuNhiTrongNamHoc(maTN, namHoc).isPresent())
+            throw new RuntimeException("Thiếu nhi với mã " + maTN + " dãở lớp khác trong năm học này");
+
+        lopNamHoc.get().getDanhSachThieuNhi().add(thieuNhi);
 
         lopNamHocRepository.save(lopNamHoc.get());
 
@@ -132,7 +142,7 @@ public class LopNamHocServiceImpl implements LopNamHocService {
 
         // Kiểm tra huynh trưởng đã có trong lớp này chưa
         HuynhTruong huynhTruong = huynhTruongOpt.get();
-        if (lopNamHoc.getDanhSachHuynhTruong().contains(huynhTruong)) {
+        if (lopNamHocRepository.timHuynhTruongTheoLopNamHoc(maHT, lopNamHoc.getMaLop_NamHoc().getMaLop(), lopNamHoc.getMaLop_NamHoc().getNamHoc()).isPresent()) {
             throw new RuntimeException("Huynh trưởng với mã " + maHT + " đã có trong lớp này");
         }
 

@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 public interface ThieuNhiService {
     public ThieuNhi addThieuNhi(ThieuNhiDto thieuNhiDto);
@@ -24,5 +25,5 @@ public interface ThieuNhiService {
 
     public void activeThieuNhi(String maTN);
 
-    public void addThieuNhiFromFileExcel(MultipartFile file);
+    public CompletableFuture<List<String>> addThieuNhiFromFileExcel(MultipartFile file);
 }

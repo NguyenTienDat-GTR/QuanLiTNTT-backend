@@ -145,6 +145,6 @@ public class ThieuNhiController {
     }
 
 //    @PostMapping("/addFromFileExcel")
-//    @PreAuthorize()
+//    @PreAuthorize("isAuthenticated()")
 
 }

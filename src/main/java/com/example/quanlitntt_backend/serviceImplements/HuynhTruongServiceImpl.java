@@ -191,7 +191,7 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
                 dto.setHo(getStringCellValue(row, 1).trim());
                 dto.setTen(getStringCellValue(row, 2).trim());
 
-                String ngaySinhStr = getDateCellValue(row, 3).trim();
+                String ngaySinhStr = ExcelUtil.getDateCellValue(row, 3).trim();
                 if (ngaySinhStr.isEmpty()) {
                     throw new IllegalArgumentException("Ngày sinh không được để trống tại dòng " + row.getRowNum());
                 }
