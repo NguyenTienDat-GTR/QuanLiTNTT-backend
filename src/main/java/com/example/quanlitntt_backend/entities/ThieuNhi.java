@@ -100,10 +100,6 @@ public class ThieuNhi {
     @Pattern(regexp = "0[0-9]{9}", message = "Số điện thoại không hợp lệ")
     private String soDienThoaiCaNhan;
 
-    @Column(name = "trinhDo")
-    @Enumerated(EnumType.STRING)
-    @NotNull(message = "Trình độ không được để trống")
-    private TrinhDo trinhDo;
 
     @Column(name = "trangThai")
     @Enumerated(EnumType.STRING)

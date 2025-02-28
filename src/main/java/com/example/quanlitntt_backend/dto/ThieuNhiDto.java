@@ -72,9 +72,6 @@ public class ThieuNhiDto {
     @Pattern(regexp = "0[0-9]{9}", message = "Số điện thoại không hợp lệ")
     private String soDienThoaiCaNhan;
 
-    @NotNull(message = "Trình độ không được để trống")
-    private TrinhDo trinhDo;
-
     @NotNull(message = "Trạng tha không được để trống")
     private TrangThaiHocVu trangThai;
 }

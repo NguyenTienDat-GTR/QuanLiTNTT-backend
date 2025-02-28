@@ -19,7 +19,7 @@ public interface ThieuNhiRepository extends JpaRepository<ThieuNhi, String> {
            + "t.maTN, t.tenThanh, t.ho, t.ten, t.ngaySinh, t.gioiTinh, t.ngayRuaToi, t.noiRuaToi, "
            + "t.ngayRuocLe, t.noiRuocLe, t.ngayThemSuc, t.noiThemSuc, t.ngayBaoDong, t.noiBaoDong, "
            + "t.hoTenCha, t.hoTenMe, t.soDienThoaiCha, t.soDienThoaiMe, t.soDienThoaiCaNhan, "
-           + "t.trinhDo, t.trangThai) FROM ThieuNhi t" +
+           + " t.trangThai) FROM ThieuNhi t" +
            " order by t.ten ASC ")
     Page<ThieuNhiDto> getAllThieuNhi(Pageable pageable);
 
@@ -27,14 +27,14 @@ public interface ThieuNhiRepository extends JpaRepository<ThieuNhi, String> {
            + "t.maTN, t.tenThanh, t.ho, t.ten, t.ngaySinh, t.gioiTinh, t.ngayRuaToi, t.noiRuaToi, "
            + "t.ngayRuocLe, t.noiRuocLe, t.ngayThemSuc, t.noiThemSuc, t.ngayBaoDong, t.noiBaoDong, "
            + "t.hoTenCha, t.hoTenMe, t.soDienThoaiCha, t.soDienThoaiMe, t.soDienThoaiCaNhan, "
-           + "t.trinhDo, t.trangThai) FROM ThieuNhi t WHERE t.maTN = ?1")
+           + " t.trangThai) FROM ThieuNhi t WHERE t.maTN = ?1")
     Optional<ThieuNhiDto> getThieuNhiByMa(String maTN);
 
     @Query("SELECT new com.example.quanlitntt_backend.dto.ThieuNhiDto( "
            + "t.maTN, t.tenThanh, t.ho, t.ten, t.ngaySinh, t.gioiTinh, t.ngayRuaToi, t.noiRuaToi, "
            + "t.ngayRuocLe, t.noiRuocLe, t.ngayThemSuc, t.noiThemSuc, t.ngayBaoDong, t.noiBaoDong, "
            + "t.hoTenCha, t.hoTenMe, t.soDienThoaiCha, t.soDienThoaiMe, t.soDienThoaiCaNhan, "
-           + "t.trinhDo, t.trangThai) FROM ThieuNhi t " +
+           + " t.trangThai) FROM ThieuNhi t " +
            "WHERE t.soDienThoaiCha LIKE :soDT OR t.soDienThoaiMe LIKE :soDT")
     Page<ThieuNhiDto> getThieuNhiBySdtChaMe(@Param("soDT") String soDT, Pageable pageable);
 

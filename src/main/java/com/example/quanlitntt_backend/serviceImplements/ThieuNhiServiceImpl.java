@@ -4,7 +4,6 @@ import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.entities.ThieuNhi;
 import com.example.quanlitntt_backend.entities.enums.GioiTinh;
 import com.example.quanlitntt_backend.entities.enums.TrangThaiHocVu;
-import com.example.quanlitntt_backend.entities.enums.TrinhDo;
 import com.example.quanlitntt_backend.entities.enums.VaiTro;
 import com.example.quanlitntt_backend.repositories.ThieuNhiRepository;
 import com.example.quanlitntt_backend.services.ThieuNhiService;
@@ -120,7 +119,6 @@ public class ThieuNhiServiceImpl implements ThieuNhiService {
         tn.setHoTenMe(thieuNhiDto.getHoTenMe());
         tn.setSoDienThoaiMe(thieuNhiDto.getSoDienThoaiMe());
         tn.setSoDienThoaiCaNhan(thieuNhiDto.getSoDienThoaiCaNhan());
-        tn.setTrinhDo(thieuNhiDto.getTrinhDo());
         tn.setTaiKhoan(null);
     }
 
@@ -270,8 +268,6 @@ public class ThieuNhiServiceImpl implements ThieuNhiService {
                         thieuNhiDto.setNoiThemSuc(getStringCellValue(row, 15));
                         thieuNhiDto.setNgayBaoDong(parseDate(dateFormat, ExcelUtil.getDateCellValue(row, 16)));
                         thieuNhiDto.setNoiBaoDong(getStringCellValue(row, 17));
-                        thieuNhiDto.setTrinhDo(parseEnum(TrinhDo.class, getStringCellValue(row, 18)));
-                        thieuNhiDto.setTrangThai(parseEnum(TrangThaiHocVu.class, getStringCellValue(row, 19)));
 
                         danhSachThieuNhi.add(thieuNhiDto);
                     } catch (Exception e) {

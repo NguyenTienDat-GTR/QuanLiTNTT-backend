@@ -4,6 +4,7 @@ import com.example.quanlitntt_backend.dto.HuynhTruongDto;
 import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.entities.HuynhTruong;
 import com.example.quanlitntt_backend.entities.ThieuNhi;
+import com.example.quanlitntt_backend.entities.enums.TrangThaiHocVu;
 import com.example.quanlitntt_backend.repositories.ThieuNhiRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,8 +73,7 @@ public class ExcelUtil {
         tn.setHoTenMe(dto.getHoTenMe());
         tn.setSoDienThoaiMe(dto.getSoDienThoaiMe());
         tn.setSoDienThoaiCaNhan(dto.getSoDienThoaiCaNhan());
-        tn.setTrinhDo(dto.getTrinhDo());
-        tn.setTrangThai(dto.getTrangThai());
+        tn.setTrangThai(TrangThaiHocVu.DANGHOC);
         tn.setTaiKhoan(null);
 
         // Kiểm tra các giá trị quan trọng trước khi tạo mã thiếu nhi

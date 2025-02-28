@@ -2,6 +2,7 @@ package com.example.quanlitntt_backend.serviceImplements;
 
 import com.example.quanlitntt_backend.entities.*;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
+import com.example.quanlitntt_backend.entities.enums.VaiTro;
 import com.example.quanlitntt_backend.repositories.*;
 import com.example.quanlitntt_backend.services.LopNamHocService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,12 @@ public class LopNamHocServiceImpl implements LopNamHocService {
 
     @Autowired
     private Executor asyncExecutor; // Dùng Executor để chạy đa luồng
+
+    private final TaiKhoanServiceImpl taiKhoanService;
+
+    public LopNamHocServiceImpl(TaiKhoanServiceImpl taiKhoanService) {
+        this.taiKhoanService = taiKhoanService;
+    }
 
     @Override
     public void addLopNamNganh(List<String> maLop, String namHoc) {
@@ -125,11 +132,13 @@ public class LopNamHocServiceImpl implements LopNamHocService {
         }
 
         if (lopNamHocRepository.timThieuNhiTrongNamHoc(maTN, namHoc).isPresent())
-            throw new RuntimeException("Thiếu nhi với mã " + maTN + " dãở lớp khác trong năm học này");
+            throw new RuntimeException("Thiếu nhi với mã " + maTN + " đã ở lớp khác trong năm học này");
 
         lopNamHoc.get().getDanhSachThieuNhi().add(thieuNhi);
 
         lopNamHocRepository.save(lopNamHoc.get());
+
+        taiKhoanService.taoTaiKhoan(maTN, VaiTro.THIEUNHI);
 
     }
 
