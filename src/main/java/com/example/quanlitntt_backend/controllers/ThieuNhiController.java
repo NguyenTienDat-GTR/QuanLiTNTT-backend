@@ -20,7 +20,7 @@ public class ThieuNhiController {
     private ThieuNhiServiceImpl thieuNhiService;
 
     @PostMapping("/add")
-    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY','TRUONGNGANH','THUKYNGANH')")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY','TRUONGNGANH','THUKYNGANH','HUYNHTRUONG')")
     public ResponseEntity<?> addThieuNhi(@RequestBody ThieuNhiDto thieuNhiDto) {
         try {
             if (thieuNhiDto.getNgaySinh() == null) {
@@ -143,5 +143,8 @@ public class ThieuNhiController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi chuyển trạng thái thiếu nhi. " + e.getMessage());
         }
     }
+
+//    @PostMapping("/addFromFileExcel")
+//    @PreAuthorize()
 
 }

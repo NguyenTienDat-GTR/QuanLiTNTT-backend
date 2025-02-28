@@ -4,6 +4,7 @@ import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.entities.ThieuNhi;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,4 +23,6 @@ public interface ThieuNhiService {
     public void deleteThieuNhi(String maTN);
 
     public void activeThieuNhi(String maTN);
+
+    public void addThieuNhiFromFileExcel(MultipartFile file);
 }

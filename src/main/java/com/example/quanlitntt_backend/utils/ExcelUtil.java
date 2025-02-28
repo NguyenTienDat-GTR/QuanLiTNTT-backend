@@ -1,7 +1,10 @@
 package com.example.quanlitntt_backend.utils;
 
 import com.example.quanlitntt_backend.dto.HuynhTruongDto;
+import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.entities.HuynhTruong;
+import com.example.quanlitntt_backend.entities.ThieuNhi;
+import com.example.quanlitntt_backend.repositories.ThieuNhiRepository;
 import org.apache.poi.ss.usermodel.*;
 
 import java.text.SimpleDateFormat;
@@ -9,6 +12,8 @@ import java.text.SimpleDateFormat;
 public class ExcelUtil {
 
     private static GenerateMa generateMa = new GenerateMa();
+
+    private static ThieuNhiRepository thieuNhiRepository;
 
     public static HuynhTruong convertFileHuynhTruongToEntity(HuynhTruongDto dto) {
         HuynhTruong entity = new HuynhTruong();
@@ -31,6 +36,33 @@ public class ExcelUtil {
         entity.setCapSao(dto.getCapSao());
         entity.setHoatDong(dto.isHoatDong());
         return entity;
+    }
+
+    public static ThieuNhi convertFileThieuNhiToEntity(ThieuNhiDto dto) {
+        ThieuNhi tn = new ThieuNhi();
+
+        generateMa.generateMaThieuNhi(dto.getNgaySinh(), dto.getTenThanh(), dto.getHo(), dto.getTen(), thieuNhiRepository::existsById);
+        tn.setTenThanh(dto.getTenThanh());
+        tn.setHo(dto.getHo());
+        tn.setTen(dto.getTen());
+        tn.setGioiTinh(dto.getGioiTinh());
+        tn.setNgaySinh(dto.getNgaySinh());
+        tn.setNgayRuaToi(dto.getNgayRuaToi());
+        tn.setNoiRuaToi(dto.getNoiRuaToi());
+        tn.setNgayRuocLe(dto.getNgayRuocLe());
+        tn.setNoiRuocLe(dto.getNoiRuocLe());
+        tn.setNgayThemSuc(dto.getNgayThemSuc());
+        tn.setNoiThemSuc(dto.getNoiThemSuc());
+        tn.setNgayBaoDong(dto.getNgayBaoDong());
+        tn.setNoiBaoDong(dto.getNoiBaoDong());
+        tn.setHoTenCha(dto.getHoTenCha());
+        tn.setSoDienThoaiCha(dto.getSoDienThoaiCha());
+        tn.setHoTenMe(dto.getHoTenMe());
+        tn.setSoDienThoaiMe(dto.getSoDienThoaiMe());
+        tn.setSoDienThoaiCaNhan(dto.getSoDienThoaiCaNhan());
+        tn.setTrinhDo(dto.getTrinhDo());
+        tn.setTaiKhoan(null);
+        return tn;
     }
 
     public static boolean isCellDateFormatted(Cell cell) {

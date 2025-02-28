@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "Lop_NamHoc", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"maLop", "namHoc"})
@@ -21,20 +24,19 @@ public class LopNamHoc {
     private LopNamHocKey maLop_NamHoc;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("maLop")
-    private Lop lop;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("namHoc")
-    private NamHoc namHoc;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "maNganh")
     protected Nganh nganh;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "maHT")
-    protected HuynhTruong huynhTruong;
+    @ManyToMany
+    @JoinTable(
+            name = "LopNamHoc_HuynhTruong",
+            joinColumns = {
+                    @JoinColumn(name = "maLop", referencedColumnName = "maLop"),
+                    @JoinColumn(name = "namHoc", referencedColumnName = "namHoc")
+            },
+            inverseJoinColumns = @JoinColumn(name = "maHT")
+    )
+    private List<HuynhTruong> danhSachHuynhTruong = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "maTN")
