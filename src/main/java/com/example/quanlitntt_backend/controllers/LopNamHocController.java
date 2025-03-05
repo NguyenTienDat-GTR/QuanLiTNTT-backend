@@ -322,6 +322,82 @@ public class LopNamHocController {
         }
     }
 
+    //chuyển TN sang lớp khác
+    @PutMapping("/chuyen-thieu-nhi-lop")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> chuyenThieuNhiSangLopKhac(@RequestBody List<String> dsMaTN,
+                                                       @RequestParam String maLopCu,
+                                                       @RequestParam String maLopMoi,
+                                                       @RequestParam String namHoc) {
+        try {
+            // Kiểm tra lớp cũ và lớp mới có tồn tại không
+            if (lopService.getLopByMaLop(maLopCu).isEmpty() || lopService.getLopByMaLop(maLopMoi).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp học");
+            }
+
+            List<String> thanhCong = new ArrayList<>();
+            List<String> thatBai = new ArrayList<>();
+
+            for (String maThieuNhi : dsMaTN) {
+                try {
+                    // Lấy danh sách năm học của Thiếu Nhi
+                    List<String> danhSachNamHoc = lopNamHocService.getDanhSachNamHocCuaThieuNhi(maThieuNhi);
+
+                    if (danhSachNamHoc.isEmpty()) {
+                        thatBai.add("Thiếu Nhi mã " + maThieuNhi + " không có dữ liệu năm học.");
+                        continue;
+                    }
+
+                    // Lấy năm học mới nhất của Thiếu Nhi
+                    String namHocHienTai = danhSachNamHoc.get(0); // Vì danh sách đã sắp xếp giảm dần
+
+                    // Kiểm tra nếu năm học mới nhất không trùng với namHoc yêu cầu
+                    if (!namHocHienTai.equals(namHoc)) {
+                        thatBai.add("Thiếu Nhi mã " + maThieuNhi + " thuộc năm học " + namHocHienTai +
+                                    ", không thể chuyển sang lớp của năm học " + namHoc);
+                        continue;
+                    }
+
+                    // Kiểm tra Thiếu Nhi có trong lớp cũ không
+                    Optional<ThieuNhi> tn = lopNamHocService.timTNTheoLopNamHoc(maThieuNhi, maLopCu, namHoc);
+                    if (tn.isEmpty()) {
+                        thatBai.add("Thiếu Nhi mã " + maThieuNhi + " không thuộc lớp " + maLopCu + " năm học " + namHoc);
+                        continue;
+                    }
+
+                    // Thực hiện chuyển lớp
+                    boolean result = lopNamHocService.chuyenThieuNhiSangLopKhac(maThieuNhi, maLopCu, maLopMoi, namHoc);
+                    if (result) {
+                        thanhCong.add("Chuyển Thiếu Nhi mã " + maThieuNhi + " thành công.");
+                    } else {
+                        thatBai.add("Không thể chuyển Thiếu Nhi mã " + maThieuNhi);
+                    }
+
+                } catch (Exception e) {
+                    thatBai.add("Lỗi khi xử lý Thiếu Nhi mã " + maThieuNhi + ": " + e.getMessage());
+                }
+            }
+
+            // Tạo phản hồi trả về
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", thanhCong);
+            response.put("failed", thatBai);
+
+            if (thanhCong.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi chuyển Thiếu Nhi: " + e.getMessage());
+        }
+    }
+
+
+
+
+
 }
 
 

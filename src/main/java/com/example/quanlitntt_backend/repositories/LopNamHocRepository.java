@@ -1,9 +1,6 @@
 package com.example.quanlitntt_backend.repositories;
 
-import com.example.quanlitntt_backend.entities.HuynhTruong;
-import com.example.quanlitntt_backend.entities.Lop;
-import com.example.quanlitntt_backend.entities.LopNamHoc;
-import com.example.quanlitntt_backend.entities.ThieuNhi;
+import com.example.quanlitntt_backend.entities.*;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -77,16 +74,23 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
             nativeQuery = true)
     int xoaHuynhTruongKhoiLop(@Param("maHT") String maHT, @Param("maLop") String maLop, @Param("namHoc") String namHoc);
 
+    // chuyển lớp cho thiếu nhi
     @Transactional
     @Modifying
     @Query(value = "UPDATE lop_nam_hoc_thieu_nhi " +
                    "SET ma_lop = :maLopMoi " +
-                   "WHERE ma_thieu_nhi = :maTN " +
+                   "WHERE matn = :maTN " +
                    "AND ma_lop = :maLopCu " +
                    "AND nam_hoc = :namHoc",
             nativeQuery = true)
     int chuyenThieuNhiSangLopKhac(@Param("maTN") String maTN, @Param("maLopCu") String maLopCu,
                                   @Param("maLopMoi") String maLopMoi, @Param("namHoc") String namHoc);
+
+    // lấy danh sách năm học của thiếu nhi
+    @Query(value = "SELECT DISTINCT nam_hoc FROM lop_nam_hoc_thieu_nhi " +
+                   "WHERE matn = :maThieuNhi " +
+                   "ORDER BY nam_hoc DESC", nativeQuery = true)
+    List<String> findDanhSachNamHocByMaThieuNhi(@Param("maThieuNhi") String maThieuNhi);
 
 
 }

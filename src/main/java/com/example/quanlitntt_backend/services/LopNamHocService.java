@@ -4,6 +4,7 @@ import com.example.quanlitntt_backend.dto.LopNamHocDto;
 import com.example.quanlitntt_backend.entities.HuynhTruong;
 import com.example.quanlitntt_backend.entities.Lop;
 import com.example.quanlitntt_backend.entities.LopNamHoc;
+import com.example.quanlitntt_backend.entities.ThieuNhi;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
 
 import java.util.List;
@@ -27,6 +28,10 @@ public interface LopNamHocService {
 
     public boolean xoaHuynhTruongKhoiLop(String maHT, String maLop, String namHoc);
 
+    public Optional<ThieuNhi> timTNTheoLopNamHoc(String maTN, String maLop, String namHoc);
+
     public boolean chuyenThieuNhiSangLopKhac(String maTN, String maLopCu, String maLopMoi, String namHoc);
+
+    public List<String> getDanhSachNamHocCuaThieuNhi(String maThieuNhi);
 
 }

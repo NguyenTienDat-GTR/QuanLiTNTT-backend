@@ -189,11 +189,23 @@ public class LopNamHocServiceImpl implements LopNamHocService {
 
     }
 
-    //chuyển
+    @Override
+    public Optional<ThieuNhi> timTNTheoLopNamHoc(String maTN, String maLop, String namHoc) {
+        return lopNamHocRepository.timThieuNhiTheoLopNamHoc(maTN, maLop, namHoc);
+    }
+
+    //chuyển thiếu nhi sang lớp khác
     @Override
     public boolean chuyenThieuNhiSangLopKhac(String maTN, String maLopCu, String maLopMoi, String namHoc) {
-        return false;
+        return lopNamHocRepository.chuyenThieuNhiSangLopKhac(maTN, maLopCu, maLopMoi, namHoc) > 0;
     }
+
+    @Override
+    public List<String> getDanhSachNamHocCuaThieuNhi(String maThieuNhi) {
+        return lopNamHocRepository.findDanhSachNamHocByMaThieuNhi(maThieuNhi);
+    }
+
+
 
 
 }
