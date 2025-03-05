@@ -3,15 +3,12 @@ package com.example.quanlitntt_backend.controllers;
 import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.entities.*;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
-import com.example.quanlitntt_backend.entities.enums.VaiTro;
 import com.example.quanlitntt_backend.serviceImplements.*;
 import com.example.quanlitntt_backend.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.util.Optionals;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -212,6 +209,10 @@ public class LopNamHocController {
             if (lopNamHocService.getLopNamHocById(key).isEmpty())
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
 
+            if (nganhService.getNganhById(maNganh).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy ngành với mã " + maNganh);
+            }
+
             if ("HUYNHTRUONG".equals(role) && lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được thêm Thiếu Nhi vào lớp mình quản lí");
             }
@@ -272,6 +273,10 @@ public class LopNamHocController {
 
             if (lopNamHocService.getLopNamHocById(key).isEmpty())
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+
+            if (nganhService.getNganhById(maNganh).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy ngành với mã " + maNganh);
+            }
 
             if ("HUYNHTRUONG".equals(role) && lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được thêm Thiếu Nhi vào lớp mình quản lí");
@@ -443,8 +448,93 @@ public class LopNamHocController {
         }
     }
 
-//    @DeleteMapping("delete-ThieuNhi-lop")
-//    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY','TRUONGNGANH','THUKYNGANH')")
+    @DeleteMapping("delete-ThieuNhi-lop")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY','TRUONGNGANH','THUKYNGANH','HUYNHTRUONG')")
+    public ResponseEntity<?> xoaThieuNhiKhoiLop(@RequestBody List<String> dsMaTN,
+                                                @RequestParam String maLop,
+                                                @RequestParam String namHoc,
+                                                @RequestParam String maNganh,
+                                                @RequestHeader("Authorization") String token) {
+        try {
+
+            // Loại bỏ "Bearer " từ token
+            String jwtToken = token.substring(7);
+
+            //lấy role từ token
+            String role = jwtUtil.extractRole(jwtToken);
+
+            //Lấy username từ token
+            String username = jwtUtil.extractUsername(jwtToken);
+
+            if (lopService.getLopByMaLop(maLop).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp với mã: " + maLop);
+            }
+
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            }
+
+            LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
+
+            if (lopNamHocService.getLopNamHocById(key).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+
+
+            if (nganhService.getNganhById(maNganh).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy ngành với mã " + maNganh);
+            }
+
+            if ("HUYNHTRUONG".equals(role) && lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được xóa Thiếu Nhi thuộc lớp mình quản lí");
+            }
+
+            if (("TRUONGNGANH".equals(role) || "THUKYNGANH".equals(role)) && lopNamHocService.layHTTheoNganhNamHoc(username, maNganh, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được xóa thiếu nhi thuộc lớp trong ngành");
+            }
+
+            List<String> thanhCong = new ArrayList<>();
+            List<String> thatBai = new ArrayList<>();
+
+            for (String maTN : dsMaTN) {
+                try {
+
+                    if (thieuNhiService.getThieuNhiByMa(maTN).isEmpty()) {
+                        thatBai.add("Thiếu Nhi mã " + maTN + " không tồn tại");
+                        continue;
+                    }
+
+                    Optional<ThieuNhi> tn = lopNamHocService.timTNTheoLopNamHoc(maTN, maLop, namHoc);
+                    if (tn.isEmpty()) {
+                        thatBai.add("Thiếu Nhi mã " + maTN + " không thuộc lớp " + maLop + " năm học " + namHoc);
+                        continue;
+                    }
+
+                    boolean result = lopNamHocService.xoaThieuNhiKhoiLop(maTN, maLop, namHoc);
+
+                    if (result) {
+                        thanhCong.add("Xóa Thiếu Nhi mã " + maTN + " thành công.");
+                    } else {
+                        thatBai.add("Không thể xóa Thiếu Nhi mã " + maTN);
+                    }
+                } catch (RuntimeException e) {
+                    thatBai.add("Lỗi khi xóa Thiếu Nhi mã " + maTN + ": " + e.getMessage());
+                }
+            }
+            // Tạo phản hồi trả về
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", thanhCong);
+            response.put("failed", thatBai);
+
+            if (thanhCong.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa thiếu nhi khỏi lớp " + e.getMessage());
+        }
+    }
 }
 
 
