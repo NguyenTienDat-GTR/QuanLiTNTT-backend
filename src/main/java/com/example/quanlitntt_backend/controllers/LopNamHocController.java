@@ -249,6 +249,7 @@ public class LopNamHocController {
     public ResponseEntity<?> addThieuNhiVaoLop(@RequestBody List<ThieuNhiDto> thieuNhiDtos,
                                                @RequestParam String maLop,
                                                @RequestParam String namHoc,
+                                               @RequestParam String maNganh,
                                                @RequestHeader("Authorization") String token) {
         try {
 
@@ -261,16 +262,23 @@ public class LopNamHocController {
             //Lấy username từ token
             String username = jwtUtil.extractUsername(jwtToken);
 
+            if (lopService.getLopByMaLop(maLop).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop);
+
+            if (namHocService.getNamHocById(namHoc).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học " + namHoc);
+
+            LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
+
+            if (lopNamHocService.getLopNamHocById(key).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+
             if ("HUYNHTRUONG".equals(role) && lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được thêm Thiếu Nhi vào lớp mình quản lí");
             }
 
-            if (lopService.getLopByMaLop(maLop).isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp với mã: " + maLop);
-            }
-
-            if (namHocService.getNamHocById(namHoc).isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            if (("TRUONGNGANH".equals(role) || "THUKYNGANH".equals(role)) && lopNamHocService.layHTTheoNganhNamHoc(username, maNganh, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được thêm thiếu nhi vào lớp trong ngành");
             }
 
             List<String> addedThieuNhis = new ArrayList<>();
