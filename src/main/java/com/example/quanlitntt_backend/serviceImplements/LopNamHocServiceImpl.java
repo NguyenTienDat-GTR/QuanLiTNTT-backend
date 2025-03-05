@@ -138,7 +138,8 @@ public class LopNamHocServiceImpl implements LopNamHocService {
 
         lopNamHocRepository.save(lopNamHoc.get());
 
-        taiKhoanService.taoTaiKhoan(maTN, VaiTro.THIEUNHI);
+        if (taiKhoanService.getTaiKhoan(maTN).isEmpty())
+            taiKhoanService.taoTaiKhoan(maTN, VaiTro.THIEUNHI);
 
     }
 
@@ -213,6 +214,11 @@ public class LopNamHocServiceImpl implements LopNamHocService {
     @Override
     public Optional<HuynhTruong> layHTTheoNganhNamHoc(String maHT, String maNganh, String namHoc) {
         return lopNamHocRepository.layHTTheoNganhNamHoc(maHT, maNganh, namHoc);
+    }
+
+    @Override
+    public boolean kiemTraLopThuocNganhNamHoc(String maLop, String maNganh, String namHoc) {
+        return lopNamHocRepository.existsLopInNganhAndNamHoc(maLop, maNganh, namHoc) > 0;
     }
 
 

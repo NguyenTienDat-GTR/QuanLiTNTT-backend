@@ -109,4 +109,15 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE ht.maht = :maHT AND ng.ma_nganh = :maNganh AND lnh.nam_hoc = :namHoc", nativeQuery = true)
     Optional<HuynhTruong> layHTTheoNganhNamHoc(@Param("maHT") String maHT, @Param("maNganh") String maNganh, @Param("namHoc") String namHoc);
 
+    //kiểm tra lớp có thuộc ngành trong năm học hay không
+    @Query(value = "SELECT COUNT(*) FROM lop_nam_hoc lnh " +
+                   "JOIN lop l ON lnh.ma_lop = l.ma_lop " +
+                   "JOIN nam_hoc nh ON lnh.nam_hoc = nh.nam_hoc " +
+                   "JOIN nganh ng ON lnh.ma_nganh = ng.ma_nganh" +
+                   "WHERE l.ma_lop = :maLop AND nh.nam_hoc = :namHoc AND ng.ma_nganh = :maNganh",
+            nativeQuery = true)
+    int existsLopInNganhAndNamHoc(@Param("maLop") String maLop,
+                                  @Param("maNganh") String maNganh,
+                                  @Param("namHoc") String namHoc);
+
 }

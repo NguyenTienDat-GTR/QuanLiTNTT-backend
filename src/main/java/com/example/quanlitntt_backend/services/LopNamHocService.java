@@ -38,4 +38,6 @@ public interface LopNamHocService {
 
     public Optional<HuynhTruong> layHTTheoNganhNamHoc(String maHT, String maNganh, String namHoc);
 
+    public boolean kiemTraLopThuocNganhNamHoc(String maLop, String maNganh, String namHoc);
+
 }
