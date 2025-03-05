@@ -6,9 +6,11 @@ import com.example.quanlitntt_backend.entities.LopNamHoc;
 import com.example.quanlitntt_backend.entities.ThieuNhi;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -66,6 +68,25 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "JOIN lop l ON l.ma_lop = lnh.ma_lop " +
                    "WHERE tn.matn = :maTN AND nh.nam_hoc = :namHoc AND l.ma_lop = :maLop", nativeQuery = true)
     Optional<ThieuNhi> timThieuNhiTheoLopNamHoc(@Param("maTN") String maTN, @Param("maLop") String maLop, @Param("namHoc") String namHoc);
+
+    //xóa huynh trưởng ra khỏi lớp
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM lop_nam_hoc_huynh_truong " +
+                   "WHERE maht = :maHT AND ma_lop = :maLop AND nam_hoc = :namHoc",
+            nativeQuery = true)
+    int xoaHuynhTruongKhoiLop(@Param("maHT") String maHT, @Param("maLop") String maLop, @Param("namHoc") String namHoc);
+
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE lop_nam_hoc_thieu_nhi " +
+                   "SET ma_lop = :maLopMoi " +
+                   "WHERE ma_thieu_nhi = :maTN " +
+                   "AND ma_lop = :maLopCu " +
+                   "AND nam_hoc = :namHoc",
+            nativeQuery = true)
+    int chuyenThieuNhiSangLopKhac(@Param("maTN") String maTN, @Param("maLopCu") String maLopCu,
+                                  @Param("maLopMoi") String maLopMoi, @Param("namHoc") String namHoc);
 
 
 }

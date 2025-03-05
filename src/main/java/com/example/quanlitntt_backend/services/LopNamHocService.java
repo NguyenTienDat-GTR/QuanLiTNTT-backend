@@ -23,4 +23,10 @@ public interface LopNamHocService {
 
     public List<Lop> layLopTheoNganhVaNam(String maNganh, String namHoc);
 
+    public Optional<HuynhTruong> timHTTheoLopNamHoc(String maHt, String maLop, String namHoc);
+
+    public boolean xoaHuynhTruongKhoiLop(String maHT, String maLop, String namHoc);
+
+    public boolean chuyenThieuNhiSangLopKhac(String maTN, String maLopCu, String maLopMoi, String namHoc);
+
 }

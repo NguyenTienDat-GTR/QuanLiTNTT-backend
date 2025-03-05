@@ -5,16 +5,14 @@ import com.example.quanlitntt_backend.entities.*;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
 import com.example.quanlitntt_backend.serviceImplements.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Optionals;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 @RestController
@@ -252,6 +250,75 @@ public class LopNamHocController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi thêm thiếu nhi " + e.getMessage());
+        }
+    }
+
+    // xóa Ht khỏi lớp theo maHT, maLop, namHoc
+    @DeleteMapping("/delete-HuynhTruong-lop")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG')")
+    public ResponseEntity<?> xoaHuynhTruongKhoiLop(@RequestBody List<String> danhSachMaHT,
+                                                   @RequestParam String maLop,
+                                                   @RequestParam String namHoc) {
+        try {
+            // Kiểm tra lớp có tồn tại không
+            if (lopService.getLopByMaLop(maLop).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Không tìm thấy lớp với mã: " + maLop);
+            }
+
+            // Kiểm tra năm học có tồn tại không
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Không tìm thấy năm học: " + namHoc);
+            }
+
+            // Danh sách kết quả
+            List<String> thanhCong = new ArrayList<>();
+            List<String> thatBai = new ArrayList<>();
+
+            for (String maHT : danhSachMaHT) {
+                try {
+                    // Kiểm tra Huynh Trưởng có tồn tại không
+                    if (huynhTruongService.getHuynhTruongByMa(maHT).isEmpty()) {
+                        thatBai.add("Không tìm thấy Huynh Trưởng có mã: " + maHT);
+                        continue;
+                    }
+
+                    // Kiểm tra Huynh Trưởng có trong lớp không
+                    Optional<HuynhTruong> huynhTruong = lopNamHocService.timHTTheoLopNamHoc(maHT, maLop, namHoc);
+                    if (huynhTruong.isEmpty()) {
+                        thatBai.add("Huynh Trưởng mã " + maHT + " không thuộc lớp " + maLop + " năm học " + namHoc);
+                        continue;
+                    }
+
+                    // Xóa Huynh Trưởng khỏi lớp
+                    boolean ketQua = lopNamHocService.xoaHuynhTruongKhoiLop(maHT, maLop, namHoc);
+                    if (ketQua) {
+                        thanhCong.add("Đã xóa Huynh Trưởng mã " + maHT);
+                    } else {
+                        thatBai.add("Lỗi khi xóa Huynh Trưởng mã " + maHT);
+                    }
+
+                } catch (Exception e) {
+                    thatBai.add("Lỗi khi xử lý Huynh Trưởng mã " + maHT + ": " + e.getMessage());
+                }
+            }
+
+            // Kết quả trả về
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", thanhCong);
+            response.put("failed", thatBai);
+
+            if (thanhCong.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi xóa Huynh Trưởng khỏi lớp: " + e.getMessage());
         }
     }
 
