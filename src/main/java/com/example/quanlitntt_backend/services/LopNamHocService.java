@@ -34,4 +34,8 @@ public interface LopNamHocService {
 
     public List<String> getDanhSachNamHocCuaThieuNhi(String maThieuNhi);
 
+    public boolean xoaThieuNhiKhoiLop(String maTN, String maLop, String namHoc);
+
+    public Optional<HuynhTruong> layHTTheoNganhNamHoc(String maHT, String maNganh, String namHoc);
+
 }

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,5 +93,20 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "ORDER BY nam_hoc DESC", nativeQuery = true)
     List<String> findDanhSachNamHocByMaThieuNhi(@Param("maThieuNhi") String maThieuNhi);
 
+    //xóa thiếu nhi ra khỏi lớp
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM lop_nam_hoc_thieu_nhi " +
+                   "WHERE matn = :maTN AND ma_lop = :maLop AND nam_hoc = :namHoc",
+            nativeQuery = true)
+    int xoaThieuNhiKhoiLop(@Param("maTN") String maTN, @Param("maLop") String maLop, @Param("namHoc") String namHoc);
+
+
+    @Query(value = "SELECT * from huynh_truong ht " +
+                   "JOIN lop_nam_hoc_huynh_truong lnh_ht.maht ON lnh.ht.maht = ht.maht " +
+                   "JOIN lop_nam_hoc lnh ON lnh.ma_lop = lnh_ht.ma_lop AND lnh.nam_hoc = lnh_ht.nam_hoc " +
+                   "JOIN nganh ng ON lnh.ma_nganh = ng.ma_nganh " +
+                   "WHERE ht.maht = :maHT AND ng.ma_nganh = :maNganh AND lnh.nam_hoc = :namHoc", nativeQuery = true)
+    Optional<HuynhTruong> layHTTheoNganhNamHoc(@Param("maHT") String maHT, @Param("maNganh") String maNganh, @Param("namHoc") String namHoc);
 
 }

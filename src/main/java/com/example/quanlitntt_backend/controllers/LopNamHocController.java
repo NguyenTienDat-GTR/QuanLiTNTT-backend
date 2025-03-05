@@ -3,12 +3,15 @@ package com.example.quanlitntt_backend.controllers;
 import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.entities.*;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
+import com.example.quanlitntt_backend.entities.enums.VaiTro;
 import com.example.quanlitntt_backend.serviceImplements.*;
+import com.example.quanlitntt_backend.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.util.Optionals;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,6 +39,9 @@ public class LopNamHocController {
 
     @Autowired
     private HuynhTruongServiceImpl huynhTruongService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/add-lop-nam/{namHoc}")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
@@ -180,12 +186,20 @@ public class LopNamHocController {
     @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
     public ResponseEntity<?> addThieuNhiVaoLopFromFile(@RequestParam("file") MultipartFile file,
                                                        @RequestParam String maLop,
-                                                       @RequestParam String namHoc) {
+                                                       @RequestParam String namHoc,
+                                                       @RequestParam String maNganh,
+                                                       @RequestHeader("Authorization") String token) {
 
         try {
-            CompletableFuture<List<String>> future = thieuNhiService.addThieuNhiFromFileExcel(file);
-            System.out.println("controller" + future.get());
-            List<String> maThieuNhiList = future.get();
+
+            // Loại bỏ "Bearer " từ token
+            String jwtToken = token.substring(7);
+
+            //lấy role từ token
+            String role = jwtUtil.extractRole(jwtToken);
+
+            //Lấy username từ token
+            String username = jwtUtil.extractUsername(jwtToken);
 
             if (lopService.getLopByMaLop(maLop).isEmpty())
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop);
@@ -197,6 +211,18 @@ public class LopNamHocController {
 
             if (lopNamHocService.getLopNamHocById(key).isEmpty())
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+
+            if ("HUYNHTRUONG".equals(role) && lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được thêm Thiếu Nhi vào lớp mình quản lí");
+            }
+
+            if (("TRUONGNGANH".equals(role) || "THUKYNGANH".equals(role)) && lopNamHocService.layHTTheoNganhNamHoc(username, maNganh, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được thêm thiếu nhi vào lớp trong ngành");
+            }
+
+            CompletableFuture<List<String>> future = thieuNhiService.addThieuNhiFromFileExcel(file);
+            List<String> maThieuNhiList = future.get();
+
 
             List<String> addedThieuNhis = new ArrayList<>();
             List<String> failedThieuNhis = new ArrayList<>();
@@ -222,8 +248,23 @@ public class LopNamHocController {
     @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
     public ResponseEntity<?> addThieuNhiVaoLop(@RequestBody List<ThieuNhiDto> thieuNhiDtos,
                                                @RequestParam String maLop,
-                                               @RequestParam String namHoc) {
+                                               @RequestParam String namHoc,
+                                               @RequestHeader("Authorization") String token) {
         try {
+
+            // Loại bỏ "Bearer " từ token
+            String jwtToken = token.substring(7);
+
+            //lấy role từ token
+            String role = jwtUtil.extractRole(jwtToken);
+
+            //Lấy username từ token
+            String username = jwtUtil.extractUsername(jwtToken);
+
+            if ("HUYNHTRUONG".equals(role) && lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được thêm Thiếu Nhi vào lớp mình quản lí");
+            }
+
             if (lopService.getLopByMaLop(maLop).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp với mã: " + maLop);
             }
@@ -394,10 +435,8 @@ public class LopNamHocController {
         }
     }
 
-
-
-
-
+//    @DeleteMapping("delete-ThieuNhi-lop")
+//    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY','TRUONGNGANH','THUKYNGANH')")
 }
 
 

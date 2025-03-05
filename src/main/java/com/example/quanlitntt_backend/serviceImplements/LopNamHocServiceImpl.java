@@ -205,7 +205,15 @@ public class LopNamHocServiceImpl implements LopNamHocService {
         return lopNamHocRepository.findDanhSachNamHocByMaThieuNhi(maThieuNhi);
     }
 
+    @Override
+    public boolean xoaThieuNhiKhoiLop(String maTN, String maLop, String namHoc) {
+        return lopNamHocRepository.xoaThieuNhiKhoiLop(maTN, maLop, namHoc) > 0;
+    }
 
+    @Override
+    public Optional<HuynhTruong> layHTTheoNganhNamHoc(String maHT, String maNganh, String namHoc) {
+        return lopNamHocRepository.layHTTheoNganhNamHoc(maHT, maNganh, namHoc);
+    }
 
 
 }
