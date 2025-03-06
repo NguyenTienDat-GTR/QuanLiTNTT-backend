@@ -20,10 +20,10 @@ public class BangDiem {
     @Column(name = "maBangDiem")
     private String maBangDiem;
 
-    @Column(name = "diemKT_HKI")
+    @Column(name = "diemKT_HKI", columnDefinition = "DOUBLE DEFAULT NULL")
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemKT_HKI;
+    private Double diemKT_HKI;
 
     @Column(name = "diemThiGL_HKI")
     @Min(value = 0, message = "Điểm không được âm")
@@ -44,10 +44,10 @@ public class BangDiem {
     @Enumerated(EnumType.STRING)
     private PhieuThuong phieuThuong;
 
-    @Column(name = "diemKT_HKII")
+    @Column(name = "diemKT_HKII", columnDefinition = "DOUBLE DEFAULT NULL")
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemKT_HKII;
+    private Double diemKT_HKII;
 
     @Column(name = "diemThiGL_HKII")
     @Min(value = 0, message = "Điểm không được âm")

@@ -100,4 +100,16 @@ package com.example.quanlitntt_backend.utils;
                 throw new RuntimeException("Lỗi tạo mã: " + e.getMessage());
             }
         }
+
+        public String generateMaBangDiem(@NotNull String maTN, @NotNull String maLop, @NotNull String namHoc) {
+            // Lấy 6 ký tự cuối của mã Thiếu Nhi
+            String maTNCut = maTN.substring(Math.max(maTN.length() - 6, 0));
+
+            // Lấy 4 ký tự mã năm học (chỉ lấy 2 số cuối của từng năm)
+            String namHocFormatted = namHoc.substring(2, 4) + namHoc.substring(7, 9);
+
+            // Ghép chuỗi theo định dạng BD + maTNCut + maLop + namHocFormatted
+            return "BD" + maTNCut + maLop + namHocFormatted;
+        }
+
     }

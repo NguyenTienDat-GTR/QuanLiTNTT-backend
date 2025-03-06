@@ -113,7 +113,7 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
     @Query(value = "SELECT COUNT(*) FROM lop_nam_hoc lnh " +
                    "JOIN lop l ON lnh.ma_lop = l.ma_lop " +
                    "JOIN nam_hoc nh ON lnh.nam_hoc = nh.nam_hoc " +
-                   "JOIN nganh ng ON lnh.ma_nganh = ng.ma_nganh" +
+                   "JOIN nganh ng ON lnh.ma_nganh = ng.ma_nganh " +
                    "WHERE l.ma_lop = :maLop AND nh.nam_hoc = :namHoc AND ng.ma_nganh = :maNganh",
             nativeQuery = true)
     int existsLopInNganhAndNamHoc(@Param("maLop") String maLop,
