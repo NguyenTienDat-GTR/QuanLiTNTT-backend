@@ -100,10 +100,12 @@ public class ThieuNhi {
     @Pattern(regexp = "0[0-9]{9}", message = "Số điện thoại không hợp lệ")
     private String soDienThoaiCaNhan;
 
-
     @Column(name = "trangThai")
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Trạng tha không được để trống")
     private TrangThaiHocVu trangThai;
+
+    @OneToOne(mappedBy = "thieuNhi", cascade = CascadeType.ALL, orphanRemoval = true)
+    private BangDiem bangDiem;
 
 }

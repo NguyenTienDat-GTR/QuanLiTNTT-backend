@@ -164,6 +164,12 @@ public class LopNamHocController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
             }
 
+            LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
+
+            if (lopNamHocService.getLopNamHocById(key).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+
+
             if (lopNamHocService.layHuynhTruongCuaLop(maLop, namHoc).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Không tìm thấy huynh trưởng nào của lớp: " + maLop);
             }

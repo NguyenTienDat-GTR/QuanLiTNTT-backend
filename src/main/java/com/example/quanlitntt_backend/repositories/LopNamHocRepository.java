@@ -120,4 +120,5 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                                   @Param("maNganh") String maNganh,
                                   @Param("namHoc") String namHoc);
 
+
 }

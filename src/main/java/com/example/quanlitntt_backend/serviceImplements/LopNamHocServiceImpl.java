@@ -221,5 +221,4 @@ public class LopNamHocServiceImpl implements LopNamHocService {
         return lopNamHocRepository.existsLopInNganhAndNamHoc(maLop, maNganh, namHoc) > 0;
     }
 
-
 }

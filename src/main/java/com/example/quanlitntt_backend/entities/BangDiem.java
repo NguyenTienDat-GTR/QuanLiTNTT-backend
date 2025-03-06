@@ -77,4 +77,15 @@ public class BangDiem {
     @Enumerated(EnumType.STRING)
     private KetQuaHocTap ketQua;
 
+    @OneToOne
+    @JoinColumn(name = "maTN", nullable = false, unique = true)
+    private ThieuNhi thieuNhi;
+
+    @ManyToOne
+    @JoinColumns({
+            @JoinColumn(name = "maLop", referencedColumnName = "maLop"),
+            @JoinColumn(name = "namHoc", referencedColumnName = "namHoc")
+    })
+    private LopNamHoc lopNamHoc;
+
 }

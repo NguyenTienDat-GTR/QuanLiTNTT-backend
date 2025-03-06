@@ -23,6 +23,16 @@ public class LopNamHoc {
     @EmbeddedId
     private LopNamHocKey maLop_NamHoc;
 
+    @ManyToOne
+//    @MapsId("namHoc")
+//    @JoinColumn(name = "nam_hoc")
+    private NamHoc namHoc;
+
+    @ManyToOne
+//    @MapsId("maLop")
+//    @JoinColumn(name = "ma_lop")
+    private Lop lop;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "maNganh")
     protected Nganh nganh;
@@ -53,8 +63,7 @@ public class LopNamHoc {
     @JoinColumn(name = "maBangDiemDanh")
     protected BangDiemDanh bangDiemDanh;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "maBangDiem")
-    protected BangDiem bangDiem;
+    @OneToMany(mappedBy = "lopNamHoc", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<BangDiem> bangDiemList = new ArrayList<>();
 
 }
