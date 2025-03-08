@@ -14,43 +14,44 @@ import lombok.*;
 @ToString
 public class BangDiemDto {
     private String maBangDiem;
-    @Min(value = 0, message = "Điểm không được âm")
-    @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemKT_HKI;
 
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemThiGL_HKI;
+    private Double diemKT_HKI;
 
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemThiTN_HKI;
+    private Double diemThiGL_HKI;
 
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemTB_HKI;
+    private Double diemThiTN_HKI;
+
+    @Min(value = 0, message = "Điểm không được âm")
+    @Max(value = 10, message = "Điểm không lớn hơn 10")
+    private Double diemTB_HKI;
 
     private PhieuThuong phieuThuong;
 
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemKT_HKII;
+    private Double diemKT_HKII;
 
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemThiGL_HKII;
+    private Double diemThiGL_HKII;
 
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemThiTN_HKII;
+    private Double diemThiTN_HKII;
 
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemTB_HKII;
+    private Double diemTB_HKII;
 
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemTBCN;
+    private Double diemTBCN;
 
     private XepLoai xepLoai;
 

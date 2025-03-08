@@ -120,5 +120,9 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                                   @Param("maNganh") String maNganh,
                                   @Param("namHoc") String namHoc);
 
+    // lấy số lượng của thiếu nhi của 1 lớp trong 1 năm học
+    @Query(value = "SELECT count(*) from lop_nam_hoc_thieu_nhi lnh_tn " +
+                   "WHERE lnh_tn.nam_hoc = :namHoc AND lnh_tn.ma_lop = :maLop ", nativeQuery = true)
+    int laySoLuongTNCuaLop(@Param("maLop") String maLop, @Param("namHoc") String namHoc);
 
 }

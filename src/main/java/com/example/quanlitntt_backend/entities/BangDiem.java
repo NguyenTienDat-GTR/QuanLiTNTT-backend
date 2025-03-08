@@ -28,17 +28,17 @@ public class BangDiem {
     @Column(name = "diemThiGL_HKI")
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemThiGL_HKI;
+    private Double diemThiGL_HKI;
 
     @Column(name = "diemThiTN_HKI")
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemThiTN_HKI;
+    private Double diemThiTN_HKI;
 
     @Column(name = "diemTB_HKI")
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemTB_HKI;
+    private Double diemTB_HKI;
 
     @Column(name = "phieuThuong")
     @Enumerated(EnumType.STRING)
@@ -52,22 +52,22 @@ public class BangDiem {
     @Column(name = "diemThiGL_HKII")
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemThiGL_HKII;
+    private Double diemThiGL_HKII;
 
     @Column(name = "diemThiTN_HKII")
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemThiTN_HKII;
+    private Double diemThiTN_HKII;
 
     @Column(name = "diemTB_HKII")
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemTB_HKII;
+    private Double diemTB_HKII;
 
     @Column(name = "diemTBCN")
     @Min(value = 0, message = "Điểm không được âm")
     @Max(value = 10, message = "Điểm không lớn hơn 10")
-    private double diemTBCN;
+    private Double diemTBCN;
 
     @Column(name = "xepLoai")
     @Enumerated(EnumType.STRING)

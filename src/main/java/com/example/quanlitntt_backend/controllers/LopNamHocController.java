@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.Disposable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -38,7 +40,13 @@ public class LopNamHocController {
     private HuynhTruongServiceImpl huynhTruongService;
 
     @Autowired
+    private BangDiemServiceImpl bangDiemService;
+
+    @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private WebClient webClient;
 
     @PostMapping("/add-lop-nam/{namHoc}")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
@@ -116,7 +124,7 @@ public class LopNamHocController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Lớp " + maLop + " không thuộc ngành " + maNganh);
             }
 
-            if ("TRUONGNGANH".equals(role)  && lopNamHocService.layHTTheoNganhNamHoc(username, maNganh, namHoc).isEmpty()) {
+            if ("TRUONGNGANH".equals(role) && lopNamHocService.layHTTheoNganhNamHoc(username, maNganh, namHoc).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được thêm huynh trưởng vào lớp trong ngành");
             }
 
@@ -416,6 +424,7 @@ public class LopNamHocController {
 
                     // Thêm vào lớp
                     lopNamHocService.addThieuNhiVaoLop(maTN, maLop, namHoc);
+
                     thanhCong.add("Thêm vào lớp thành công mã: " + maTN);
                 } catch (RuntimeException e) {
                     thatBai.add("Lỗi với Thiếu Nhi " + maTN + ": " + e.getMessage());
@@ -584,6 +593,8 @@ public class LopNamHocController {
                     boolean result = lopNamHocService.chuyenThieuNhiSangLopKhac(maThieuNhi, maLopCu, maLopMoi, namHoc);
                     if (result) {
                         thanhCong.add("Chuyển Thiếu Nhi mã " + maThieuNhi + " thành công.");
+                        bangDiemService.xoaBangDiem(maThieuNhi,maLopCu,namHoc);
+                        bangDiemService.taoBangDiem(maThieuNhi,maLopMoi,namHoc);
                     } else {
                         thatBai.add("Không thể chuyển Thiếu Nhi mã " + maThieuNhi);
                     }
@@ -677,6 +688,7 @@ public class LopNamHocController {
                     boolean result = lopNamHocService.xoaThieuNhiKhoiLop(maTN, maLop, namHoc);
 
                     if (result) {
+                        bangDiemService.xoaBangDiem(maTN, maLop, namHoc);
                         thanhCong.add("Xóa Thiếu Nhi mã " + maTN + " thành công.");
                     } else {
                         thatBai.add("Không thể xóa Thiếu Nhi mã " + maTN);

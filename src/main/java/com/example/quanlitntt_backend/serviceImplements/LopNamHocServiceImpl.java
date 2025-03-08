@@ -41,6 +41,9 @@ public class LopNamHocServiceImpl implements LopNamHocService {
     @Autowired
     private Executor asyncExecutor; // Dùng Executor để chạy đa luồng
 
+    @Autowired
+    private BangDiemServiceImpl bangDiemService;
+
     private final TaiKhoanServiceImpl taiKhoanService;
 
     public LopNamHocServiceImpl(TaiKhoanServiceImpl taiKhoanService) {
@@ -137,6 +140,7 @@ public class LopNamHocServiceImpl implements LopNamHocService {
         lopNamHoc.get().getDanhSachThieuNhi().add(thieuNhi);
 
         lopNamHocRepository.save(lopNamHoc.get());
+        bangDiemService.taoBangDiem(maTN, maLop, namHoc);
 
         if (taiKhoanService.getTaiKhoan(maTN).isEmpty())
             taiKhoanService.taoTaiKhoan(maTN, VaiTro.THIEUNHI);
