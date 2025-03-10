@@ -116,14 +116,14 @@ public class BangDiemServiceImpl implements BangDiemService {
             dto.setDiemThiGL_HKI((Double) row[6]);
             dto.setDiemThiTN_HKI((Double) row[7]);
             dto.setDiemTB_HKI((Double) row[8]);
-            dto.setPhieuThuong(PhieuThuong.valueOf((String) row[9]));
+            dto.setPhieuThuong(row[9] != null ? PhieuThuong.valueOf((String) row[9]) : null);
             dto.setDiemKT_HKII((Double) row[10]);
             dto.setDiemThiGL_HKII((Double) row[11]);
             dto.setDiemThiTN_HKII((Double) row[12]);
             dto.setDiemTB_HKII((Double) row[13]);
             dto.setDiemTBCN((Double) row[14]);
-            dto.setXepLoai(XepLoai.valueOf((String) row[15]));
-            dto.setKetQua(KetQuaHocTap.valueOf((String) row[16]));
+            dto.setXepLoai(row[15] != null ? XepLoai.valueOf((String) row[15]) : null);
+            dto.setKetQua(row[16] != null ? KetQuaHocTap.valueOf((String) row[16]) : null);
 
             return dto;
         }).toList();

@@ -15,6 +15,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/bang-diem")
@@ -79,31 +83,52 @@ public class BangDiemController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được tạo bảng điểm thuộc ngành mình quản lí");
             }
 
+            // Lấy số nhân CPU để cấu hình số luồng tối ưu
+            int soNhanCPU = Runtime.getRuntime().availableProcessors();
+            int soLuongLuong = soNhanCPU * 2;
+
+            // Tạo ThreadPool Executor
+            ExecutorService executorService = Executors.newFixedThreadPool(soLuongLuong);
+
+            List<CompletableFuture<Map.Entry<String, String>>> futures = dsMaTN.stream()
+                    .map(maTN -> CompletableFuture.supplyAsync(() -> {
+                        try {
+                            Optional<ThieuNhiDto> optionalThieuNhi = thieuNhiService.getThieuNhiByMa(maTN);
+                            if (optionalThieuNhi.isEmpty()) {
+                                return Map.entry(maTN, "Không tìm thấy Thiếu Nhi có mã: " + maTN);
+                            }
+
+                            if (lopNamHocService.timTNTheoLopNamHoc(maTN, maLop, namHoc).isEmpty()) {
+                                return Map.entry(maTN, "Thiếu Nhi " + maTN + " không có trong lớp " + maLop);
+                            }
+
+                            bangDiemService.taoBangDiem(maTN, maLop, namHoc);
+                            return Map.entry(maTN, "success");
+
+                        } catch (Exception e) {
+                            return Map.entry(maTN, "Lỗi với Thiếu Nhi " + maTN + ": " + e.getMessage());
+                        }
+                    }, executorService))
+                    .toList();
+
+            // Chờ tất cả tác vụ hoàn thành
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
             List<String> thanhCong = new ArrayList<>();
             List<String> thatBai = new ArrayList<>();
 
-            for (String maTN : dsMaTN) {
-                try {
-                    // Kiểm tra xem Thiếu Nhi có tồn tại không
-                    Optional<ThieuNhiDto> optionalThieuNhi = thieuNhiService.getThieuNhiByMa(maTN);
-                    if (optionalThieuNhi.isEmpty()) {
-                        thatBai.add("Không tìm thấy Thiếu Nhi có mã: " + maTN);
-                        continue;
-                    }
-
-                    // Kiểm tra xem Thiếu Nhi đã có trong lớp chưa
-                    if (lopNamHocService.timTNTheoLopNamHoc(maTN, maLop, namHoc).isEmpty()) {
-                        thatBai.add("Thiếu Nhi " + maTN + " không có trong lớp " + maLop);
-                        continue;
-                    }
-
-                    bangDiemService.taoBangDiem(maTN, maLop, namHoc);
-                    thanhCong.add("Tạo bảng điểm thành công cho: " + maTN);
-                } catch (RuntimeException e) {
-                    thatBai.add("Lỗi với Thiếu Nhi " + maTN + ": " + e.getMessage());
+            for (CompletableFuture<Map.Entry<String, String>> future : futures) {
+                Map.Entry<String, String> result = future.get();  // Lấy kết quả từ mỗi CompletableFuture
+                if ("success".equals(result.getValue())) {
+                    thanhCong.add("Tạo bảng điểm thành công cho: " + result.getKey());
+                } else {
+                    thatBai.add(result.getValue());
                 }
-
             }
+
+            // Tắt ExecutorService
+            executorService.shutdown();
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", thanhCong);
             response.put("failed", thatBai);
@@ -119,6 +144,7 @@ public class BangDiemController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi tạo bảng điểm: " + e.getMessage());
         }
     }
+
 
     @PutMapping("/update")
     @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
@@ -159,35 +185,52 @@ public class BangDiemController {
                         .body(Map.of("error", "Chỉ được cập nhật bảng điểm thuộc ngành mình quản lý"));
             }
 
-            List<String> thanhCong = new ArrayList<>();
-            List<String> thatBai = new ArrayList<>();
+            List<String> thanhCong = Collections.synchronizedList(new ArrayList<>());
+            List<String> thatBai = Collections.synchronizedList(new ArrayList<>());
 
-            for (BangDiemDto dto : dsBangDiem) {
-                try {
-                    Optional<BangDiem> bangDiemOpt = bangDiemService.layBangDiemTheoMa(dto.getMaBangDiem());
+            // Lấy số nhân CPU để cấu hình số luồng tối ưu
+            int soNhanCPU = Runtime.getRuntime().availableProcessors();
+            int soLuongLuong = soNhanCPU * 2;
 
-                    if (bangDiemOpt.isEmpty()) {
-                        thatBai.add("Không tìm thấy bảng điểm có mã " + dto.getMaBangDiem());
-                        continue;
-                    }
+            // Tạo ThreadPool Executor
+            ExecutorService executorService = Executors.newFixedThreadPool(soLuongLuong);
 
-                    BangDiem bangDiem = bangDiemOpt.get();
+            // Danh sách các tác vụ bất đồng bộ
+            List<CompletableFuture<Void>> futures = dsBangDiem.stream()
+                    .map(dto -> CompletableFuture.runAsync(() -> {
+                        try {
+                            Optional<BangDiem> bangDiemOpt = bangDiemService.layBangDiemTheoMa(dto.getMaBangDiem());
 
-                    if (!kiemTraDiemHopLe(bangDiem)) {
-                        thatBai.add("Điểm của bảng điểm " + dto.getMaBangDiem() + " không hợp lệ! Giá trị phải từ 0 đến 10.");
-                        continue;
-                    }
+                            if (bangDiemOpt.isEmpty()) {
+                                thatBai.add("Không tìm thấy bảng điểm có mã " + dto.getMaBangDiem());
+                                return;
+                            }
 
-                    bangDiemService.capNhatBangDiem(dto);
-                    thanhCong.add("Cập nhật bảng điểm " + dto.getMaBangDiem() + " thành công");
+                            BangDiem bangDiem = bangDiemOpt.get();
 
-                } catch (Exception e) {
-                    thatBai.add("Lỗi khi cập nhật bảng điểm " + dto.getMaBangDiem() + ": " + e.getMessage());
-                }
-            }
+                            if (!kiemTraDiemHopLe(bangDiem)) {
+                                thatBai.add("Điểm của bảng điểm " + dto.getMaBangDiem() + " không hợp lệ! Giá trị phải từ 0 đến 10.");
+                                return;
+                            }
 
+                            bangDiemService.capNhatBangDiem(dto);
+                            thanhCong.add("Cập nhật bảng điểm " + dto.getMaBangDiem() + " thành công");
+
+                        } catch (Exception e) {
+                            thatBai.add("Lỗi khi cập nhật bảng điểm " + dto.getMaBangDiem() + ": " + e.getMessage());
+                        }
+                    }, executorService)).toList();
+
+            // Chờ tất cả các tác vụ hoàn thành
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            // Gọi hàm xếp loại sau khi tất cả cập nhật đã hoàn tất
             bangDiemService.xepLoaiAPlus(maLop, namHoc);
 
+            // Đóng ThreadPool
+            executorService.shutdown();
+
+            // Tạo phản hồi trả về
             Map<String, Object> response = new HashMap<>();
             response.put("success", thanhCong);
             response.put("failed", thatBai);
@@ -203,6 +246,7 @@ public class BangDiemController {
                     .body(Map.of("error", "Lỗi khi cập nhật bảng điểm: " + e.getMessage()));
         }
     }
+
 
     // Hàm kiểm tra điểm hợp lệ
     private boolean kiemTraDiemHopLe(BangDiem bangDiem) {
@@ -223,8 +267,6 @@ public class BangDiemController {
                                                             @RequestParam String namHoc,
                                                             @RequestHeader("Authorization") String token) {
         try {
-            System.out.println("maLop: " + maLop);
-            System.out.println("namHoc: " + namHoc);
 
             String jwtToken = token.substring(7);
             String role = jwtUtil.extractRole(jwtToken);
