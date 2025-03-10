@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -24,17 +25,27 @@ public class NamHocServiceImpl implements NamHocService {
 
         NamHoc namHoc = new NamHoc();
 
-        namHoc.setNamHoc(namHocDto.getNamHoc());
-
         Date ngayBatDauFormatted = DateUtil.convertToDateFormat(namHocDto.getNgayBatDau());
+        Date ngayKetThuc = DateUtil.addYearToDate(ngayBatDauFormatted, 1);
 
         namHoc.setNgayBatDau(ngayBatDauFormatted);
+        namHoc.setNgayKetThuc(ngayKetThuc);
 
-        //tao ngay ket thuc = ngay bat dau cong 1 nam
-        namHoc.setNgayKetThuc(DateUtil.addYearToDate(ngayBatDauFormatted, 1));
+        // Lấy năm từ ngày bắt đầu và ngày kết thúc
+        Calendar cal = Calendar.getInstance();
+
+        cal.setTime(ngayBatDauFormatted);
+        int namBatDau = cal.get(Calendar.YEAR);
+
+        cal.setTime(ngayKetThuc);
+        int namKetThuc = cal.get(Calendar.YEAR);
+
+        // Tạo chuỗi namHoc theo định dạng XXXX-YYYY
+        namHoc.setNamHoc(namBatDau + "-" + namKetThuc);
 
         return namHocRepository.save(namHoc);
     }
+
 
     @Override
     public NamHoc updateNamHoc(NamHocDto namHocDto) {
