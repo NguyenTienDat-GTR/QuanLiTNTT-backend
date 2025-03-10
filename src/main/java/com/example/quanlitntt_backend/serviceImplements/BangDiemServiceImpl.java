@@ -1,6 +1,7 @@
 package com.example.quanlitntt_backend.serviceImplements;
 
 import com.example.quanlitntt_backend.dto.BangDiemDto;
+import com.example.quanlitntt_backend.dto.ThieuNhiBangDiemDto;
 import com.example.quanlitntt_backend.entities.BangDiem;
 import com.example.quanlitntt_backend.entities.LopNamHoc;
 import com.example.quanlitntt_backend.entities.ThieuNhi;
@@ -14,6 +15,9 @@ import com.example.quanlitntt_backend.repositories.ThieuNhiRepository;
 import com.example.quanlitntt_backend.services.BangDiemService;
 import com.example.quanlitntt_backend.utils.GenerateMa;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,6 +98,37 @@ public class BangDiemServiceImpl implements BangDiemService {
     @Override
     public Optional<BangDiem> layBangDiemTheoMa(String maBD) {
         return bangDiemRepository.findById(maBD);
+    }
+
+    @Override
+    public Page<ThieuNhiBangDiemDto> layBangDiemCuaThieuNhiTrongLop(String maLop, String namHoc, Pageable pageable) {
+        Page<Object[]> resultPage = bangDiemRepository.layBangDiemCuaThieuNhiTrongLop(maLop, namHoc, pageable);
+
+        List<ThieuNhiBangDiemDto> dtos = resultPage.getContent().stream().map(row -> {
+            ThieuNhiBangDiemDto dto = new ThieuNhiBangDiemDto();
+
+            dto.setMaTN((String) row[0]);
+            dto.setTenThanh((String) row[1]);
+            dto.setHo((String) row[2]);
+            dto.setTen((String) row[3]);
+            dto.setMaBangDiem((String) row[4]);
+            dto.setDiemKT_HKI((Double) row[5]);
+            dto.setDiemThiGL_HKI((Double) row[6]);
+            dto.setDiemThiTN_HKI((Double) row[7]);
+            dto.setDiemTB_HKI((Double) row[8]);
+            dto.setPhieuThuong(PhieuThuong.valueOf((String) row[9]));
+            dto.setDiemKT_HKII((Double) row[10]);
+            dto.setDiemThiGL_HKII((Double) row[11]);
+            dto.setDiemThiTN_HKII((Double) row[12]);
+            dto.setDiemTB_HKII((Double) row[13]);
+            dto.setDiemTBCN((Double) row[14]);
+            dto.setXepLoai(XepLoai.valueOf((String) row[15]));
+            dto.setKetQua(KetQuaHocTap.valueOf((String) row[16]));
+
+            return dto;
+        }).toList();
+
+        return new PageImpl<>(dtos, pageable, resultPage.getTotalElements());
     }
 
     private BangDiem tinhDiem(BangDiem bangDiem) {

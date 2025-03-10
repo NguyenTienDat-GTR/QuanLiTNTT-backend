@@ -6,7 +6,9 @@ import com.example.quanlitntt_backend.entities.BangDiem;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
 import com.example.quanlitntt_backend.serviceImplements.*;
 import com.example.quanlitntt_backend.utils.JwtUtil;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -120,7 +122,7 @@ public class BangDiemController {
 
     @PutMapping("/update")
     @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
-    public ResponseEntity<?> capNhatBangDiem(@RequestBody List<BangDiemDto> dsBangDiem,
+    public ResponseEntity<?> capNhatBangDiem(@RequestBody @Valid List<BangDiemDto> dsBangDiem,
                                              @RequestParam String maLop,
                                              @RequestParam String namHoc,
                                              @RequestParam String maNganh,
@@ -212,5 +214,46 @@ public class BangDiemController {
                (bangDiem.getDiemThiTN_HKII() == null || (bangDiem.getDiemThiTN_HKII() >= 0 && bangDiem.getDiemThiTN_HKII() <= 10));
     }
 
+    // lấy bảng điểm của tất cả thiếu nhi trong lớp
+    @GetMapping("/get-bangDiem-thieuNhi-lop")
+    @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
+    public ResponseEntity<?> layBangDiemCuaThieuNhiTrongLop(@RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "10") int size,
+                                                            @RequestParam String maLop,
+                                                            @RequestParam String namHoc,
+                                                            @RequestHeader("Authorization") String token) {
+        try {
+            System.out.println("maLop: " + maLop);
+            System.out.println("namHoc: " + namHoc);
+
+            String jwtToken = token.substring(7);
+            String role = jwtUtil.extractRole(jwtToken);
+            String username = jwtUtil.extractUsername(jwtToken);
+            LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
+
+            if (lopNamHocService.getLopNamHocById(key).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+            }
+
+            if (!("ADMIN".equals(role) ||
+                  "XUDOANTRUONG".equals(role) ||
+                  "THUKY".equals(role)) &&
+                lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Bạn chỉ có quyền xem bảng điểm của lớp mình quản lí");
+            }
+
+            PageRequest pageRequest = PageRequest.of(page, size);
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(bangDiemService.layBangDiemCuaThieuNhiTrongLop(maLop, namHoc, pageRequest));
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy bảng điểm. " + e.getMessage());
+        }
+    }
 
 }
