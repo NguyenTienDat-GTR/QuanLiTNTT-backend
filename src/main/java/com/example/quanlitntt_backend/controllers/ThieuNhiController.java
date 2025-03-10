@@ -2,6 +2,7 @@ package com.example.quanlitntt_backend.controllers;
 
 import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.serviceImplements.ThieuNhiServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +22,7 @@ public class ThieuNhiController {
 
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY','TRUONGNGANH','THUKYNGANH','HUYNHTRUONG')")
-    public ResponseEntity<?> addThieuNhi(@RequestBody ThieuNhiDto thieuNhiDto) {
+    public ResponseEntity<?> addThieuNhi(@RequestBody @Valid ThieuNhiDto thieuNhiDto) {
         try {
             if (thieuNhiDto.getNgaySinh() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ngày sinh không được để trống.");
@@ -101,7 +102,7 @@ public class ThieuNhiController {
 
     @PutMapping("/update")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY','TRUONGNGANH','THUKYNGANH','HUYNHTRUONG')")
-    public ResponseEntity<?> updateThieuNhi(@RequestBody ThieuNhiDto thieuNhiDto) {
+    public ResponseEntity<?> updateThieuNhi(@RequestBody @Valid ThieuNhiDto thieuNhiDto) {
         try {
             if (thieuNhiDto.getMaTN().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Vui lòng nhập mã để cập nhật");

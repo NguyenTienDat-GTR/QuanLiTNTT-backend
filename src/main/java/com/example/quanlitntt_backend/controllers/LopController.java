@@ -3,6 +3,7 @@ package com.example.quanlitntt_backend.controllers;
 import com.example.quanlitntt_backend.dto.LopDto;
 import com.example.quanlitntt_backend.entities.Lop;
 import com.example.quanlitntt_backend.serviceImplements.LopServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,7 +26,7 @@ public class LopController {
 
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
-    public ResponseEntity<?> addLop(@RequestBody List<LopDto> listLopDto) {
+    public ResponseEntity<?> addLop(@RequestBody @Valid List<LopDto> listLopDto) {
         try {
             List<String> errors = new ArrayList<>();
             List<String> successMessages = new ArrayList<>();

@@ -2,6 +2,7 @@ package com.example.quanlitntt_backend.controllers;
 
 import com.example.quanlitntt_backend.dto.ChucVuDto;
 import com.example.quanlitntt_backend.serviceImplements.ChucVuServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ public class ChucVuController {
 
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG')")
-    public ResponseEntity<?> addChucVu(@RequestBody ChucVuDto chucVuDto) {
+    public ResponseEntity<?> addChucVu(@RequestBody @Valid ChucVuDto chucVuDto) {
         try {
 
             if (chucVuDto.getTenChucVu().isEmpty()) {

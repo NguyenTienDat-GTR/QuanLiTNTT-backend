@@ -3,6 +3,7 @@ package com.example.quanlitntt_backend.controllers;
 import com.example.quanlitntt_backend.dto.NganhDto;
 import com.example.quanlitntt_backend.entities.Nganh;
 import com.example.quanlitntt_backend.serviceImplements.NganhServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class NganhController {
 
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG')")
-    public ResponseEntity<?> addNganh(@RequestBody NganhDto nganhDto) {
+    public ResponseEntity<?> addNganh(@RequestBody @Valid NganhDto nganhDto) {
         try {
             if (nganhService.getNganhById(nganhDto.getMaNganh()).isPresent()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Đã tồn tại ngành với mã ngành " + nganhDto.getMaNganh());
@@ -52,7 +53,7 @@ public class NganhController {
 
     @PutMapping("/update")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
-    public ResponseEntity<?> updateNganh(@RequestBody NganhDto nganhDto) {
+    public ResponseEntity<?> updateNganh(@RequestBody @Valid NganhDto nganhDto) {
         try {
             if (nganhDto.getMaNganh().isEmpty() || nganhDto.getTenNganh().isEmpty()){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Mã ngành và tên ngành không được để trống");

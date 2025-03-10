@@ -7,6 +7,7 @@ import com.example.quanlitntt_backend.serviceImplements.ChucVuHuynhTruongService
 import com.example.quanlitntt_backend.serviceImplements.ChucVuServiceImpl;
 import com.example.quanlitntt_backend.serviceImplements.HuynhTruongServiceImpl;
 import com.example.quanlitntt_backend.serviceImplements.NamHocServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,7 +37,7 @@ public class ChucVuHuynhTruongController {
 
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN', 'XUDOANTRUONG')")
-    public ResponseEntity<?> addChucVuHuynhTruong(@RequestBody ChucVuHuynhTruongDto chucVuHuynhTruongDto) {
+    public ResponseEntity<?> addChucVuHuynhTruong(@RequestBody @Valid ChucVuHuynhTruongDto chucVuHuynhTruongDto) {
         try {
 
             if (huynhTruongService.getHuynhTruongByMa(chucVuHuynhTruongDto.getMaHT()).isEmpty()) {
@@ -71,7 +72,7 @@ public class ChucVuHuynhTruongController {
 
     @PutMapping("/update")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG')")
-    public ResponseEntity<?> deteleteChucVuHuynhTruong(@RequestBody ChucVuHuynhTruongDto chucVuHuynhTruongDto) {
+    public ResponseEntity<?> deteleteChucVuHuynhTruong(@RequestBody @Valid ChucVuHuynhTruongDto chucVuHuynhTruongDto) {
         try {
 
             if (huynhTruongService.getHuynhTruongByMa(chucVuHuynhTruongDto.getMaHT()).isEmpty()) {

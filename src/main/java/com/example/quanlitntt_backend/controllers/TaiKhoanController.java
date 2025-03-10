@@ -3,6 +3,7 @@ package com.example.quanlitntt_backend.controllers;
 import com.example.quanlitntt_backend.dto.HuynhTruongDto;
 import com.example.quanlitntt_backend.entities.enums.VaiTro;
 import com.example.quanlitntt_backend.serviceImplements.TaiKhoanServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class TaiKhoanController {
     @PostMapping("/create")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
     //form data
-    public ResponseEntity<?> taoTaiKhoan(@ModelAttribute HuynhTruongDto huynhTruongDTO, @ModelAttribute VaiTro vaiTro) {
+    public ResponseEntity<?> taoTaiKhoan(@ModelAttribute @Valid HuynhTruongDto huynhTruongDTO, @ModelAttribute VaiTro vaiTro) {
         try {
 
             if (taiKhoanService.getTaiKhoan(huynhTruongDTO.getMaHT()).isPresent()) {

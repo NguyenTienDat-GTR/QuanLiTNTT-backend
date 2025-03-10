@@ -5,6 +5,7 @@ import com.example.quanlitntt_backend.entities.HuynhTruong;
 import com.example.quanlitntt_backend.entities.enums.CapSao;
 import com.example.quanlitntt_backend.serviceImplements.HuynhTruongServiceImpl;
 import com.example.quanlitntt_backend.serviceImplements.TaiKhoanServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,7 +29,7 @@ public class HuynhTruongController {
 
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
-    public ResponseEntity<?> addHuynhTruong(@RequestBody HuynhTruongDto huynhTruongDTO) {
+    public ResponseEntity<?> addHuynhTruong(@RequestBody @Valid HuynhTruongDto huynhTruongDTO) {
         try {
 
             if (huynhTruongService.getHuynhTruongBySoDT(huynhTruongDTO.getSoDienThoai()).isPresent()) {
@@ -52,7 +53,7 @@ public class HuynhTruongController {
 
     @PutMapping("/update/{maHT}")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
-    public ResponseEntity<?> updateHuynhTruong(@RequestBody HuynhTruongDto huynhTruongDTO, @PathVariable String maHT) {
+    public ResponseEntity<?> updateHuynhTruong(@RequestBody @Valid HuynhTruongDto huynhTruongDTO, @PathVariable String maHT) {
         try {
             if (huynhTruongService.getHuynhTruongByMa(maHT).isPresent()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)

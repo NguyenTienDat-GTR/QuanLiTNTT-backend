@@ -2,6 +2,7 @@ package com.example.quanlitntt_backend.controllers;
 
 import com.example.quanlitntt_backend.dto.NamHocDto;
 import com.example.quanlitntt_backend.serviceImplements.NamHocServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +21,7 @@ public class NamHocController {
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
     @Transactional
-    public ResponseEntity<?> addNamHoc(@RequestBody NamHocDto namHoc) {
+    public ResponseEntity<?> addNamHoc(@RequestBody @Valid NamHocDto namHoc) {
 
         try {
             if (namHocService.getNamHocById(namHoc.getNamHoc()).isPresent()) {
