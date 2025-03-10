@@ -125,4 +125,12 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE lnh_tn.nam_hoc = :namHoc AND lnh_tn.ma_lop = :maLop ", nativeQuery = true)
     int laySoLuongTNCuaLop(@Param("maLop") String maLop, @Param("namHoc") String namHoc);
 
+    // kiểm tra thếu nhi có thuộc ngành trong nam học hay không
+    @Query(value = "SELECT count(*) from lop_nam_hoc_thieu_nhi lnh_tn " +
+                   "JOIN lop_nam_hoc lnh ON lnh_tn.ma_lop = lnh.ma_lop AND lnh_tn.nam_hoc = lnh.nam_hoc " +
+                   "JOIN nganh ng ON lnh.ma_nganh = ng.ma_nganh " +
+                   "JOIN thieu_nhi tn ON tn.matn = lnh_tn.matn " +
+                   "WHERE tn.matn = :maTN AND lnh.nam_hoc = :namHoc AND ng.ma_nganh = :maNganh",
+            nativeQuery = true)
+    int kiemTraThieuNhiThuocNganh(@Param("maTN") String maTN, @Param("namHoc") String namHoc, @Param("maNganh") String maNganh);
 }

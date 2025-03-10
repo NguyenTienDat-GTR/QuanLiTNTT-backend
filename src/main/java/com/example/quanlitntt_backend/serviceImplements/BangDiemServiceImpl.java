@@ -1,6 +1,7 @@
 package com.example.quanlitntt_backend.serviceImplements;
 
 import com.example.quanlitntt_backend.dto.BangDiemDto;
+import com.example.quanlitntt_backend.dto.BangDiemNamHocDto;
 import com.example.quanlitntt_backend.dto.ThieuNhiBangDiemDto;
 import com.example.quanlitntt_backend.entities.BangDiem;
 import com.example.quanlitntt_backend.entities.LopNamHoc;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -130,6 +132,38 @@ public class BangDiemServiceImpl implements BangDiemService {
 
         return new PageImpl<>(dtos, pageable, resultPage.getTotalElements());
     }
+
+    @Override
+    public List<BangDiemNamHocDto> layBangDiemCuaThieuNhi(String maTN) {
+        return convertToBangDiemNamHocDto(bangDiemRepository.layBangDiemCuaThieuNhi(maTN));
+    }
+
+    public List<BangDiemNamHocDto> convertToBangDiemNamHocDto(List<Object[]> results) {
+        List<BangDiemNamHocDto> bangDiemDtos = new ArrayList<>();
+
+        for (Object[] row : results) {
+            BangDiemNamHocDto bangDiemDto = new BangDiemNamHocDto();
+
+            bangDiemDto.setMaBangDiem((String) row[0]);
+            bangDiemDto.setNamHoc((String) row[1]);
+            bangDiemDto.setDiemKT_HKI((Double) row[2]);
+            bangDiemDto.setDiemThiGL_HKI((Double) row[3]);
+            bangDiemDto.setDiemThiTN_HKI((Double) row[4]);
+            bangDiemDto.setDiemTB_HKI((Double) row[5]);
+            bangDiemDto.setPhieuThuong(PhieuThuong.valueOf((String) row[6]));
+            bangDiemDto.setDiemKT_HKII((Double) row[7]);
+            bangDiemDto.setDiemThiGL_HKII((Double) row[8]);
+            bangDiemDto.setDiemThiTN_HKII((Double) row[9]);
+            bangDiemDto.setDiemTB_HKII((Double) row[10]);
+            bangDiemDto.setDiemTBCN((Double) row[11]);
+            bangDiemDto.setXepLoai(XepLoai.valueOf((String) row[12]));
+            bangDiemDto.setKetQua(KetQuaHocTap.valueOf((String) row[13]));
+
+            bangDiemDtos.add(bangDiemDto);
+        }
+        return bangDiemDtos;
+    }
+
 
     private BangDiem tinhDiem(BangDiem bangDiem) {
 

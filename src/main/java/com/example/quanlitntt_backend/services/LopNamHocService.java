@@ -40,5 +40,6 @@ public interface LopNamHocService {
 
     public boolean kiemTraLopThuocNganhNamHoc(String maLop, String maNganh, String namHoc);
 
+    public boolean kiemTraThieuNhiThuocNganhNamHoc(String maTN, String namHoc, String maNganh);
 
 }

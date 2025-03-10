@@ -1,5 +1,7 @@
 package com.example.quanlitntt_backend.repositories;
 
+import com.example.quanlitntt_backend.dto.BangDiemDto;
+import com.example.quanlitntt_backend.dto.BangDiemNamHocDto;
 import com.example.quanlitntt_backend.dto.ThieuNhiBangDiemDto;
 import com.example.quanlitntt_backend.entities.BangDiem;
 import org.springframework.data.domain.Page;
@@ -47,5 +49,19 @@ public interface BangDiemRepository extends JpaRepository<BangDiem, String> {
             @Param("maLop") String maLop,
             @Param("namHoc") String namHoc,
             Pageable pageable);
+
+    // lây tất cả bảng điểm của 1 thiếu nhi
+    @Query(value = "SELECT bd.ma_bang_diem, lnh.nam_hoc, bd.diemkt_hki, bd.diem_thigl_hki, bd.diem_thitn_hki, bd.diemtb_hki, " +
+                   "bd.phieu_thuong, bd.diemkt_hkii, bd.diem_thigl_hkii, bd.diem_thitn_hkii, bd.diemtb_hkii, " +
+                   "bd.diemtbcn, bd.xep_loai, bd.ket_qua " +
+                   "FROM bang_diem bd " +
+                   "JOIN lop_nam_hoc lnh ON bd.ma_lop = lnh.ma_lop AND bd.nam_hoc = lnh.nam_hoc " +
+                   "WHERE bd.matn = :maTN " +
+                   "Order by lnh.nam_hoc ASC ",
+            nativeQuery = true)
+    List<Object[]> layBangDiemCuaThieuNhi(@Param("maTN") String maTN);
+
+
+
 
 }

@@ -225,4 +225,9 @@ public class LopNamHocServiceImpl implements LopNamHocService {
         return lopNamHocRepository.existsLopInNganhAndNamHoc(maLop, maNganh, namHoc) > 0;
     }
 
+    @Override
+    public boolean kiemTraThieuNhiThuocNganhNamHoc(String maTN, String namHoc, String maNganh) {
+        return lopNamHocRepository.kiemTraThieuNhiThuocNganh(maTN, namHoc, maNganh) > 0;
+    }
+
 }

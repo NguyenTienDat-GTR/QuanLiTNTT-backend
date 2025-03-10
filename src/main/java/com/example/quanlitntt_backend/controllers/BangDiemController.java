@@ -3,6 +3,9 @@ package com.example.quanlitntt_backend.controllers;
 import com.example.quanlitntt_backend.dto.BangDiemDto;
 import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.entities.BangDiem;
+import com.example.quanlitntt_backend.entities.LopNamHoc;
+import com.example.quanlitntt_backend.entities.Nganh;
+import com.example.quanlitntt_backend.entities.ThieuNhi;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
 import com.example.quanlitntt_backend.serviceImplements.*;
 import com.example.quanlitntt_backend.utils.JwtUtil;
@@ -297,5 +300,113 @@ public class BangDiemController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy bảng điểm. " + e.getMessage());
         }
     }
+
+    @GetMapping("/getAll-bangDiem-thieuNhi")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> layBangDiemCuaThieuNhi(@RequestParam(required = false) String maLop,
+                                                    @RequestParam(required = false) String namHoc,
+                                                    @RequestParam(required = false) String maTN,
+                                                    @RequestParam(required = false) String maNganh,
+                                                    @RequestHeader("Authorization") String token) {
+        try {
+            String jwtToken = token.substring(7);
+            String role = jwtUtil.extractRole(jwtToken);
+            String username = jwtUtil.extractUsername(jwtToken);
+
+            if ("THIEUNHI".equals(role)) {
+                return ResponseEntity.ok(bangDiemService.layBangDiemCuaThieuNhi(username));
+            }
+
+            // Xử lý các truy vấn song song
+            CompletableFuture<Optional<ThieuNhiDto>> thieuNhiFuture = CompletableFuture.supplyAsync(() ->
+                    maTN != null ? thieuNhiService.getThieuNhiByMa(maTN) : Optional.empty()
+            );
+
+            CompletableFuture<Optional<LopNamHoc>> lopNamHocFuture = CompletableFuture.supplyAsync(() -> {
+                if (maLop != null && namHoc != null) {
+                    LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
+                    return lopNamHocService.getLopNamHocById(key);
+                }
+                return Optional.empty();
+            });
+
+            CompletableFuture<Optional<Nganh>> nganhFuture = CompletableFuture.supplyAsync(() ->
+                    maNganh != null ? nganhService.getNganhById(maNganh) : Optional.empty()
+            );
+
+            CompletableFuture.allOf(thieuNhiFuture, lopNamHocFuture, nganhFuture).join();
+
+            // Kiểm tra dữ liệu trả về từ các tác vụ song song
+            if (maTN != null && thieuNhiFuture.get().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Không tìm thấy thiếu nhi " + maTN);
+            }
+
+            if (maLop != null && namHoc != null && lopNamHocFuture.get().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+            }
+
+            if (maNganh != null && nganhFuture.get().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body("Không tìm thấy ngành với mã " + maNganh);
+            }
+
+            // Kiểm tra mối liên hệ giữa maLop, maNganh và namHoc
+            if (maLop != null && maNganh != null && namHoc != null &&
+                !lopNamHocService.kiemTraLopThuocNganhNamHoc(maLop, maNganh, namHoc)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Lớp " + maLop + " không thuộc ngành " + maNganh);
+            }
+
+            if ("THUKYNGANH".equals(role)) {
+                if (maNganh == null || namHoc == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Phải cung cấp mã ngành và năm học để truy vấn.");
+                }
+
+                if (lopNamHocService.layHTTheoNganhNamHoc(username, maNganh, namHoc).isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body("Chỉ được xem bảng điểm của thiếu nhi thuộc ngành mình quản lý");
+                }
+
+                if (maTN != null && !lopNamHocService.kiemTraThieuNhiThuocNganhNamHoc(maTN, namHoc, maNganh)) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body("Thiếu nhi " + maTN + " không thuộc ngành " + maNganh + " trong năm học " + namHoc);
+                }
+            }
+
+            if (maTN == null && maLop == null && maNganh == null && namHoc == null) {
+                return ResponseEntity.ok("Không có dữ liệu để xử lý.");
+            }
+
+            return ResponseEntity.ok(bangDiemService.layBangDiemCuaThieuNhi(maTN));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy bảng điểm. " + e.getMessage());
+        }
+    }
+
+
+
+    //            boolean kiemTraVaiTro = "HUYNHTRUONG".equals(role) ||
+//                                    "TRUONGNGANH".equals(role) ||
+//                                    "XUDOANTRUONG".equals(role);
+//            if (kiemTraVaiTro &&
+//                lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isPresent()) {
+//                if (lopNamHocService.timTNTheoLopNamHoc(maTN, maLop, namHoc).isEmpty()) {
+//                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+//                            .body("Thiếu nhi " + maTN + "không thuộc lớp " + maLop + "trong năm học " + namHoc);
+//                } else {
+//                    return ResponseEntity.status(HttpStatus.OK).body(bangDiemService.layBangDiemCuaThieuNhi(maTN));
+//                }
+//            } else {
+//                if (kiemTraVaiTro &&
+//                    lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
+//                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+//                            .body("Chỉ được xem bảng điểm của thiếu nhi thuộc lớp mình quản lý");
+//                }
+//            }
 
 }
