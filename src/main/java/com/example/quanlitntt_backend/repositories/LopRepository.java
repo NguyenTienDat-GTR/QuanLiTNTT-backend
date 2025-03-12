@@ -10,6 +10,10 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface LopRepository extends JpaRepository<Lop, String> {
 
+    /*
+     * lấy danh sách tất cả các lớp
+     * @Param Pageable
+     */
     @Query(value = "select * from lop",
             countQuery = "Select count(*) from lop",
             nativeQuery = true)

@@ -92,7 +92,7 @@ public class ChucVuHuynhTruongController {
             //Xóa chức vụ muốn cập nhật với huynh trưởng trong năm học hiện có
             chucVuHuynhTruongService.deleteChucVuHuynhTruongByChucVu(chucVuHuynhTruongDto.getMaChucVu(), chucVuHuynhTruongDto.getNamHoc());
 
-            // xóa chức vụ hiện ta của huynh trưởng ần cập nhật
+            // xóa chức vụ hiện ta của huynh trưởng cần cập nhật
             chucVuHuynhTruongService.deleteChucVuHuynhTruongByHuynhTruong(chucVuHuynhTruongDto.getMaHT(), chucVuHuynhTruongDto.getNamHoc());
 
             // thêm chức vụ mới với huynh trưởng cần cập nhât

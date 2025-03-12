@@ -16,7 +16,11 @@ import java.util.Optional;
 @Repository
 public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocKey> {
 
-    // tìm huynh trưởng trong năm học
+    /*
+     * Tìm huynh trưởng theo năm học và mã huynh trưởng
+     * @Param String maHT
+     * @Param String namHoc
+     */
     @Query(value = "SELECT ht.* FROM huynh_truong ht " +
                    "JOIN lop_nam_hoc_huynh_truong lnh_ht ON ht.maht = lnh_ht.maht " +
                    "JOIN lop_nam_hoc lnh ON lnh_ht.ma_lop = lnh.ma_lop AND lnh_ht.nam_hoc = lnh.nam_hoc " +
@@ -24,7 +28,12 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE ht.maht = :maHT AND nh.nam_hoc = :namHoc", nativeQuery = true)
     Optional<HuynhTruong> timHuynhTruongTrongNamHoc(@Param("maHT") String maHT, @Param("namHoc") String namHoc);
 
-    // tìm huynh trưởng theo lớp và  năm học
+    /*
+     * Tìm 1 huynh trưởng theo lớp, năm học và mã huynh trưởng
+     * @Param String maHT
+     * @Param String namHoc
+     * @Param String maLop
+     */
     @Query(value = "SELECT ht.* FROM huynh_truong ht " +
                    "JOIN lop_nam_hoc_huynh_truong lnh_ht ON ht.maht = lnh_ht.maht " +
                    "JOIN lop_nam_hoc lnh ON lnh_ht.ma_lop = lnh.ma_lop AND lnh_ht.nam_hoc = lnh.nam_hoc " +
@@ -33,7 +42,11 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE ht.maht = :maHT AND nh.nam_hoc = :namHoc AND l.ma_lop = :maLop", nativeQuery = true)
     Optional<HuynhTruong> timHuynhTruongTheoLopNamHoc(@Param("maHT") String maHT, @Param("maLop") String maLop, @Param("namHoc") String namHoc);
 
-    //lấy tất cả huynh trưởng của 1 lớp trong năm học
+    /*
+     * lấy danh sách huynh trưởng của 1 lớp trong năm học
+     * @Param String namHoc
+     * @Param String maLop
+     */
     @Query(value = "SELECT ht.* FROM huynh_truong ht " +
                    "JOIN lop_nam_hoc_huynh_truong lnh_ht ON ht.maht = lnh_ht.maht " +
                    "JOIN lop_nam_hoc lnh ON lnh_ht.ma_lop = lnh.ma_lop AND lnh_ht.nam_hoc = lnh.nam_hoc " +
@@ -42,7 +55,11 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE l.ma_lop = :maLop AND nh.nam_hoc = :namHoc", nativeQuery = true)
     List<HuynhTruong> layHuynhTruongCuaLopNamHoc(@Param("maLop") String maLop, @Param("namHoc") String namHoc);
 
-    // lấy tất cả lớp theo ngành và năm học
+    /*
+     * lấy danh sách lớp theo ngành và năm học
+     * @Param String namHoc
+     * @Param String maNganh
+     */
     @Query(value = "SELECT l.* FROM lop_nam_hoc lnh " +
                    "JOIN lop l ON l.ma_lop = lnh.ma_lop " +
                    "JOIN nganh ng ON ng.ma_nganh = lnh.ma_nganh " +
@@ -50,7 +67,11 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE ng.ma_nganh = :maNganh AND nh.nam_hoc = :namHoc", nativeQuery = true)
     List<Lop> layLopTheoNganhVaNamHoc(@Param("maNganh") String maNganh, @Param("namHoc") String namHoc);
 
-    // tìm thiếu nhi trong năm học
+    /*
+     * tìm thiếu nhi trong 1 năm học
+     * @Param String namHoc
+     * @Param String maTN
+     */
     @Query(value = "SELECT tn.* FROM thieu_nhi tn " +
                    "JOIN lop_nam_hoc_thieu_nhi lnh_tn ON tn.matn = lnh_tn.matn " +
                    "JOIN lop_nam_hoc lnh ON lnh_tn.ma_lop = lnh.ma_lop AND lnh_tn.nam_hoc = lnh.nam_hoc " +
@@ -58,7 +79,12 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE tn.matn = :maTN AND nh.nam_hoc = :namHoc", nativeQuery = true)
     Optional<ThieuNhi> timThieuNhiTrongNamHoc(@Param("maTN") String maTN, @Param("namHoc") String namHoc);
 
-    // tìm thiếu nhi theo lớp và  năm học
+    /*
+     * tìm thiếu nhi theo lớp và  năm học
+     * @Param String namHoc
+     * @Param String maLop
+     * @Param String maTN
+     */
     @Query(value = "SELECT tn.* FROM thieu_nhi tn " +
                    "JOIN lop_nam_hoc_thieu_nhi lnh_tn ON tn.matn = lnh_tn.matn " +
                    "JOIN lop_nam_hoc lnh ON lnh_tn.ma_lop = lnh.ma_lop AND lnh_tn.nam_hoc = lnh.nam_hoc " +
@@ -67,7 +93,12 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE tn.matn = :maTN AND nh.nam_hoc = :namHoc AND l.ma_lop = :maLop", nativeQuery = true)
     Optional<ThieuNhi> timThieuNhiTheoLopNamHoc(@Param("maTN") String maTN, @Param("maLop") String maLop, @Param("namHoc") String namHoc);
 
-    //xóa huynh trưởng ra khỏi lớp
+    /*
+     * xóa huynh trưởng ra khỏi 1 lớp trong năm học
+     * @Param String namHoc
+     * @Param String maLop
+     * @Param String maHT
+     */
     @Transactional
     @Modifying
     @Query(value = "DELETE FROM lop_nam_hoc_huynh_truong " +
@@ -75,7 +106,13 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
             nativeQuery = true)
     int xoaHuynhTruongKhoiLop(@Param("maHT") String maHT, @Param("maLop") String maLop, @Param("namHoc") String namHoc);
 
-    // chuyển lớp cho thiếu nhi
+    /*
+     * chuyển thiếu nhi sang lớp khác
+     * @Param String namHoc
+     * @Param String maLopCu
+     * @Param String maLopMoi
+     * @Param String maTN
+     */
     @Transactional
     @Modifying
     @Query(value = "UPDATE lop_nam_hoc_thieu_nhi " +
@@ -87,13 +124,21 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
     int chuyenThieuNhiSangLopKhac(@Param("maTN") String maTN, @Param("maLopCu") String maLopCu,
                                   @Param("maLopMoi") String maLopMoi, @Param("namHoc") String namHoc);
 
-    // lấy danh sách năm học của thiếu nhi
+    /*
+     * lấy danh sách năm học của thiếu nhi
+     * @Param String maTN
+     */
     @Query(value = "SELECT DISTINCT nam_hoc FROM lop_nam_hoc_thieu_nhi " +
                    "WHERE matn = :maThieuNhi " +
                    "ORDER BY nam_hoc DESC", nativeQuery = true)
     List<String> findDanhSachNamHocByMaThieuNhi(@Param("maThieuNhi") String maThieuNhi);
 
-    //xóa thiếu nhi ra khỏi lớp
+    /*
+     * xóa thiếu nhi ra khỏi lớp
+     * @Param String maTN
+     * @Param String maLop
+     * @Param String namHoc
+     */
     @Transactional
     @Modifying
     @Query(value = "DELETE FROM lop_nam_hoc_thieu_nhi " +
@@ -101,7 +146,12 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
             nativeQuery = true)
     int xoaThieuNhiKhoiLop(@Param("maTN") String maTN, @Param("maLop") String maLop, @Param("namHoc") String namHoc);
 
-
+    /*
+     * kiểm tra huynh trưởng có thuộc 1 ngành trong năm học hay không
+     * @Param String maHT
+     * @Param String maNganh
+     * @Param String namHoc
+     */
     @Query(value = "SELECT * from huynh_truong ht " +
                    "JOIN lop_nam_hoc_huynh_truong lnh_ht.maht ON lnh.ht.maht = ht.maht " +
                    "JOIN lop_nam_hoc lnh ON lnh.ma_lop = lnh_ht.ma_lop AND lnh.nam_hoc = lnh_ht.nam_hoc " +
@@ -109,7 +159,12 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE ht.maht = :maHT AND ng.ma_nganh = :maNganh AND lnh.nam_hoc = :namHoc", nativeQuery = true)
     Optional<HuynhTruong> layHTTheoNganhNamHoc(@Param("maHT") String maHT, @Param("maNganh") String maNganh, @Param("namHoc") String namHoc);
 
-    //kiểm tra lớp có thuộc ngành trong năm học hay không
+    /*
+     * kiểm tra lớp có thuộc ngành trong năm học hay không
+     * @Param String maLop
+     * @Param String maNganh
+     * @Param String namHoc
+     */
     @Query(value = "SELECT COUNT(*) FROM lop_nam_hoc lnh " +
                    "JOIN lop l ON lnh.ma_lop = l.ma_lop " +
                    "JOIN nam_hoc nh ON lnh.nam_hoc = nh.nam_hoc " +
@@ -120,12 +175,21 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                                   @Param("maNganh") String maNganh,
                                   @Param("namHoc") String namHoc);
 
-    // lấy số lượng của thiếu nhi của 1 lớp trong 1 năm học
+    /*
+     * lấy số lượng của thiếu nhi của 1 lớp trong 1 năm học
+     * @Param String maLop
+     * @Param String namHoc
+     */
     @Query(value = "SELECT count(*) from lop_nam_hoc_thieu_nhi lnh_tn " +
                    "WHERE lnh_tn.nam_hoc = :namHoc AND lnh_tn.ma_lop = :maLop ", nativeQuery = true)
     int laySoLuongTNCuaLop(@Param("maLop") String maLop, @Param("namHoc") String namHoc);
 
-    // kiểm tra thếu nhi có thuộc ngành trong nam học hay không
+    /*
+     * kiểm tra thếu nhi có thuộc ngành trong nam học hay không
+     * @Param String maTN
+     * @Param String namHoc
+     * @Param String maNganh
+     */
     @Query(value = "SELECT count(*) from lop_nam_hoc_thieu_nhi lnh_tn " +
                    "JOIN lop_nam_hoc lnh ON lnh_tn.ma_lop = lnh.ma_lop AND lnh_tn.nam_hoc = lnh.nam_hoc " +
                    "JOIN nganh ng ON lnh.ma_nganh = ng.ma_nganh " +
