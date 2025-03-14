@@ -166,76 +166,69 @@ public class BangDiemServiceImpl implements BangDiemService {
 
 
     private BangDiem tinhDiem(BangDiem bangDiem) {
-
-        Double diemTBHKI = null;
-        Double diemTBHKII = null;
-        Double diemTBNam = null;
-
-        if (bangDiem.getDiemKT_HKI() == null &&
-            bangDiem.getDiemThiGL_HKI() != null &&
-            bangDiem.getDiemThiTN_HKI() != null) {
-
-            diemTBHKI = (bangDiem.getDiemThiGL_HKI() * 2 + bangDiem.getDiemThiTN_HKI()) / 3;
-
-        }
-        if (bangDiem.getDiemKT_HKI() != null &&
-            bangDiem.getDiemThiGL_HKI() != null &&
-            bangDiem.getDiemThiTN_HKI() != null) {
-            diemTBHKI = (((bangDiem.getDiemThiGL_HKI() * 2 + bangDiem.getDiemThiTN_HKI()) / 3) * 2 + bangDiem.getDiemKT_HKI()) / 3;
-        }
-
-        if (bangDiem.getDiemKT_HKII() == null &&
-            bangDiem.getDiemThiGL_HKII() != null &&
-            bangDiem.getDiemThiTN_HKII() != null) {
-
-            diemTBHKII = (bangDiem.getDiemThiGL_HKII() * 2 + bangDiem.getDiemThiTN_HKII()) / 3;
-
-        }
-
-        if (bangDiem.getDiemKT_HKII() != null &&
-            bangDiem.getDiemThiGL_HKII() != null &&
-            bangDiem.getDiemThiTN_HKII() != null) {
-            diemTBHKII = (((bangDiem.getDiemThiGL_HKII() * 2 + bangDiem.getDiemThiTN_HKII()) / 3) * 2 + bangDiem.getDiemKT_HKII()) / 3;
-        }
-
-        if (diemTBHKI != null && diemTBHKII != null)
-            diemTBNam = (diemTBHKI + diemTBHKII) / 2;
-
-        // Làm tròn điểm đến 2 chữ số thập phân
-        diemTBHKI = diemTBHKI != null ? Math.round(diemTBHKI * 100.0) / 100.0 : null;
-        diemTBHKII = diemTBHKII != null ? Math.round(diemTBHKII * 100.0) / 100.0 : null;
-        diemTBNam = diemTBNam != null ? Math.round(diemTBNam * 100.0) / 100.0 : null;
+        Double diemTBHKI = tinhDiemTBHK(bangDiem.getDiemKT_HKI(), bangDiem.getDiemThiGL_HKI(), bangDiem.getDiemThiTN_HKI());
+        Double diemTBHKII = tinhDiemTBHK(bangDiem.getDiemKT_HKII(), bangDiem.getDiemThiGL_HKII(), bangDiem.getDiemThiTN_HKII());
+        Double diemTBNam = tinhDiemTBNam(diemTBHKI, diemTBHKII);
 
         bangDiem.setDiemTB_HKI(diemTBHKI);
         bangDiem.setDiemTB_HKII(diemTBHKII);
         bangDiem.setDiemTBCN(diemTBNam);
 
+        bangDiem.setPhieuThuong(tinhPhieuThuong(diemTBHKI));
+        tinhKetQuaVaXepLoai(bangDiem);
 
-        if (bangDiem.getDiemTB_HKI() == null)
-            bangDiem.setPhieuThuong(null);
-        else if (bangDiem.getDiemTB_HKI() >= 8)
-            bangDiem.setPhieuThuong(PhieuThuong.A);
-        else if (bangDiem.getDiemTB_HKI() >= 5)
-            bangDiem.setPhieuThuong(PhieuThuong.B);
-        else bangDiem.setPhieuThuong(PhieuThuong.C);
+        return bangDiem;
+    }
 
-        if (bangDiem.getDiemTBCN() == null) {
+    private Double tinhDiemTBHK(Double diemKT, Double diemThiGL, Double diemThiTN) {
+        if (diemThiGL == null || diemThiTN == null) return null;
+
+        double diemTBHK = (diemThiGL * 2 + diemThiTN) / 3;
+
+        if (diemKT != null) {
+            diemTBHK = (diemTBHK * 2 + diemKT) / 3;
+        }
+
+        // Làm tròn đến 2 chữ số thập phân
+        return Math.round(diemTBHK * 100.0) / 100.0;
+    }
+
+    private Double tinhDiemTBNam(Double diemTBHKI, Double diemTBHKII) {
+        if (diemTBHKI == null || diemTBHKII == null) return null;
+
+        double diemTBNam = (diemTBHKI + diemTBHKII) / 2;
+        return Math.round(diemTBNam * 100.0) / 100.0;
+    }
+
+    private PhieuThuong tinhPhieuThuong(Double diemTBHKI) {
+        if (diemTBHKI == null) return null;
+
+        if (diemTBHKI >= 8) return PhieuThuong.A;
+        if (diemTBHKI >= 5) return PhieuThuong.B;
+        return PhieuThuong.C;
+    }
+
+    private void tinhKetQuaVaXepLoai(BangDiem bangDiem) {
+        Double diemTBCN = bangDiem.getDiemTBCN();
+
+        if (diemTBCN == null) {
             bangDiem.setXepLoai(null);
             bangDiem.setKetQua(null);
-        } else if (bangDiem.getDiemTBCN() < 5) {
+            return;
+        }
+
+        if (diemTBCN < 5) {
             bangDiem.setKetQua(KetQuaHocTap.OLai);
             bangDiem.setXepLoai(XepLoai.Yeu);
         } else {
             bangDiem.setKetQua(KetQuaHocTap.LenLop);
-            if (bangDiem.getDiemTBCN() <= 6.5)
-                bangDiem.setXepLoai(XepLoai.TrungBinh);
-            if (bangDiem.getDiemTBCN() < 8)
-                bangDiem.setXepLoai(XepLoai.Kha);
+
+            if (diemTBCN <= 6.5) bangDiem.setXepLoai(XepLoai.TrungBinh);
+            else if (diemTBCN < 8) bangDiem.setXepLoai(XepLoai.Kha);
             else bangDiem.setXepLoai(XepLoai.Gioi);
         }
-
-        return bangDiem;
     }
+
 
     @Override
     @Transactional
@@ -254,7 +247,7 @@ public class BangDiemServiceImpl implements BangDiemService {
         bangDiem.setDiemThiTN_HKI(bangDiemDto.getDiemThiTN_HKI() >= 0 ? bangDiemDto.getDiemThiTN_HKI() : null);
 
 
-        if (bangDiemOptional.get().getDiemTB_HKI() == null) {
+        if (bangDiem.getDiemTB_HKI() == null) {
             throw new RuntimeException("Phải có điểm trung bình học kì I mới được phép nhập điểm học kì II");
         }
 
