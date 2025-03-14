@@ -287,6 +287,7 @@ public class BangDiemController {
                                                             @RequestParam(defaultValue = "10") int size,
                                                             @RequestParam String maLop,
                                                             @RequestParam String namHoc,
+                                                            @RequestParam String maNganh,
                                                             @RequestHeader("Authorization") String token) {
         try {
 
@@ -304,23 +305,27 @@ public class BangDiemController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
             }
 
-            if (!namHocService.kiemTraNamHocHienTai(namHoc) && "HUYNHTRUONG".equals(role))
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("Chỉ được xem bảng điểm ở năm học hiện tại");
-
-            if (!("ADMIN".equals(role) ||
-                  "XUDOANTRUONG".equals(role) ||
-                  "THUKY".equals(role)) &&
-                lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Bạn chỉ có quyền xem bảng điểm của lớp mình quản lí");
-            }
-
             PageRequest pageRequest = PageRequest.of(page, size);
 
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(bangDiemService.layBangDiemCuaThieuNhiTrongLop(maLop, namHoc, pageRequest));
+            if (namHocService.kiemTraNamHocHienTai(namHoc)) {
+                if (!("XUDOANTRUONG".equals(role) ||
+                      "TRUONGNGANH".equals(role) ||
+                      "HUYNHTRUONG".equals(role)) &&
+                    lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body("Bạn chỉ có quyền xem bảng điểm của lớp mình quản lí");
+                }
 
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(bangDiemService.layBangDiemCuaThieuNhiTrongLop(maLop, namHoc, pageRequest));
+            }
+
+            if ("THUKYNGANH".equals(role) && lopNamHocService.layHTTheoNganhNamHoc(username, maNganh, namHoc).isPresent()) {
+                return ResponseEntity.status(HttpStatus.OK)
+                        .body(bangDiemService.layBangDiemCuaThieuNhiTrongLop(maLop, namHoc, pageRequest));
+            } else
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ được xem bảng điểm thuộc ngành mình quản lí");
 
         } catch (Exception e) {
             e.printStackTrace();
