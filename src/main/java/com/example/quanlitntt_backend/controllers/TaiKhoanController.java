@@ -5,6 +5,7 @@ import com.example.quanlitntt_backend.entities.enums.VaiTro;
 import com.example.quanlitntt_backend.serviceImplements.TaiKhoanServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -86,5 +87,30 @@ public class TaiKhoanController {
         }
     }
 
+    @GetMapping("/get-danhSachTaiKhoan-HT")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> layDanhSachTaiKHoanHT(@RequestParam(defaultValue = "0") int page,
+                                                   @RequestParam(defaultValue = "10") int size) {
+        try {
+            PageRequest pageRequest = PageRequest.of(page, size);
+
+            return ResponseEntity.status(HttpStatus.OK).body(taiKhoanService.getAllTaiKhoanHT(pageRequest));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi khi lấy danh sách tài khoản: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/get-danhSachTaiKhoan-TN")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> layDanhSachTaiKHoanTN(@RequestParam(defaultValue = "0") int page,
+                                                   @RequestParam(defaultValue = "10") int size) {
+        try {
+            PageRequest pageRequest = PageRequest.of(page, size);
+
+            return ResponseEntity.status(HttpStatus.OK).body(taiKhoanService.getAllTaiKhoanTN(pageRequest));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Lỗi khi lấy danh sách tài khoản: " + e.getMessage());
+        }
+    }
 
 }

@@ -282,7 +282,8 @@ public class LopNamHocServiceImpl implements LopNamHocService {
         return new PageImpl<>(thieuNhiDtos, pageable, result.getTotalElements());
     }
 
-
+    // export danh sách thiếu nhi trong lớp thành file excel
+    //sử dụng đa luồng
     @Override
     public ByteArrayInputStream exportDSThieuNhiLopToFileExcel(String maLop, String namHoc) {
         List<Object[]> thieuNhiList = lopNamHocRepository.layDSThieuNhiByLopAndNamHocToExport(maLop, namHoc);

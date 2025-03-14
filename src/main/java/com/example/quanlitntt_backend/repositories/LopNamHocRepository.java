@@ -224,7 +224,7 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                                                Pageable pageable);
 
     /*
-     * Lấy danh sách thiếu nhi cu 1 lớp trong 1 năm học
+     * Lấy danh sách thiếu nhi của 1 lớp trong 1 năm học
      * @Param String maLop
      * @Param String namHoc
      */
