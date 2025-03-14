@@ -1,12 +1,16 @@
 package com.example.quanlitntt_backend.services;
 
 import com.example.quanlitntt_backend.dto.LopNamHocDto;
+import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.entities.HuynhTruong;
 import com.example.quanlitntt_backend.entities.Lop;
 import com.example.quanlitntt_backend.entities.LopNamHoc;
 import com.example.quanlitntt_backend.entities.ThieuNhi;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,5 +45,9 @@ public interface LopNamHocService {
     public boolean kiemTraLopThuocNganhNamHoc(String maLop, String maNganh, String namHoc);
 
     public boolean kiemTraThieuNhiThuocNganhNamHoc(String maTN, String namHoc, String maNganh);
+
+    public Page<ThieuNhiDto> layDSThieuNHiByLopAndNamHoc(String maLop, String namHoc, Pageable pageable);
+
+    public ByteArrayInputStream exportDSThieuNhiLopToFileExcel(String maLop, String namHoc);
 
 }

@@ -4,6 +4,7 @@ import com.example.quanlitntt_backend.entities.enums.GioiTinh;
 import com.example.quanlitntt_backend.entities.enums.TrangThaiHocVu;
 import com.example.quanlitntt_backend.entities.enums.TrinhDo;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;

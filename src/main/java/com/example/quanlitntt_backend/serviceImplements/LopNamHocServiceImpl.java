@@ -1,19 +1,28 @@
 package com.example.quanlitntt_backend.serviceImplements;
 
+import com.example.quanlitntt_backend.dto.ThieuNhiDto;
 import com.example.quanlitntt_backend.entities.*;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
+import com.example.quanlitntt_backend.entities.enums.GioiTinh;
+import com.example.quanlitntt_backend.entities.enums.TrangThaiHocVu;
 import com.example.quanlitntt_backend.entities.enums.VaiTro;
 import com.example.quanlitntt_backend.repositories.*;
 import com.example.quanlitntt_backend.services.LopNamHocService;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 
@@ -228,6 +237,139 @@ public class LopNamHocServiceImpl implements LopNamHocService {
     @Override
     public boolean kiemTraThieuNhiThuocNganhNamHoc(String maTN, String namHoc, String maNganh) {
         return lopNamHocRepository.kiemTraThieuNhiThuocNganh(maTN, namHoc, maNganh) > 0;
+    }
+
+    @Override
+    public Page<ThieuNhiDto> layDSThieuNHiByLopAndNamHoc(String maLop, String namHoc, Pageable pageable) {
+        Page<Object[]> result = lopNamHocRepository.layDSThieuNhiByLopAndNamHoc(maLop, namHoc, pageable);
+
+        ExecutorService executorService = Executors.newFixedThreadPool(10); // 10 luồng song song
+
+        List<Future<ThieuNhiDto>> futures = result.stream().map(objects -> executorService.submit(() -> {
+            ThieuNhiDto thieuNhiDto = new ThieuNhiDto();
+            thieuNhiDto.setMaTN((String) objects[0]);
+            thieuNhiDto.setTenThanh((String) objects[1]);
+            thieuNhiDto.setHo((String) objects[2]);
+            thieuNhiDto.setTen((String) objects[3]);
+            thieuNhiDto.setNgaySinh((Date) objects[4]);
+            thieuNhiDto.setGioiTinh(GioiTinh.valueOf((String) objects[5]));
+            thieuNhiDto.setNgayRuaToi((Date) objects[6]);
+            thieuNhiDto.setNoiRuaToi((String) objects[7]);
+            thieuNhiDto.setNgayRuocLe((Date) objects[8]);
+            thieuNhiDto.setNoiRuocLe((String) objects[9]);
+            thieuNhiDto.setNgayThemSuc((Date) objects[10]);
+            thieuNhiDto.setNoiThemSuc((String) objects[11]);
+            thieuNhiDto.setNgayBaoDong((Date) objects[12]);
+            thieuNhiDto.setNoiBaoDong((String) objects[13]);
+            thieuNhiDto.setHoTenCha((String) objects[14]);
+            thieuNhiDto.setHoTenMe((String) objects[15]);
+            thieuNhiDto.setSoDienThoaiCha((String) objects[16]);
+            thieuNhiDto.setSoDienThoaiMe((String) objects[17]);
+            thieuNhiDto.setSoDienThoaiCaNhan((String) objects[18]);
+            thieuNhiDto.setTrangThai(TrangThaiHocVu.valueOf((String) objects[19]));
+            return thieuNhiDto;
+        })).toList();
+
+        List<ThieuNhiDto> thieuNhiDtos = futures.stream().map(future -> {
+            try {
+                return future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }).toList();
+
+        executorService.shutdown();
+        return new PageImpl<>(thieuNhiDtos, pageable, result.getTotalElements());
+    }
+
+
+    @Override
+    public ByteArrayInputStream exportDSThieuNhiLopToFileExcel(String maLop, String namHoc) {
+        List<Object[]> thieuNhiList = lopNamHocRepository.layDSThieuNhiByLopAndNamHocToExport(maLop, namHoc);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("DanhSachThieuNhi");
+
+            // Tạo style cho header (tô đậm và có border)
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontHeightInPoints((short) 12);
+            headerStyle.setFont(headerFont);
+            headerStyle.setAlignment(HorizontalAlignment.CENTER);
+            headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
+
+            // Thêm border cho header
+            headerStyle.setBorderTop(BorderStyle.THIN);
+            headerStyle.setBorderBottom(BorderStyle.THIN);
+            headerStyle.setBorderLeft(BorderStyle.THIN);
+            headerStyle.setBorderRight(BorderStyle.THIN);
+
+            // Tạo style cho dữ liệu (có border)
+            CellStyle dataStyle = workbook.createCellStyle();
+            dataStyle.setBorderTop(BorderStyle.THIN);
+            dataStyle.setBorderBottom(BorderStyle.THIN);
+            dataStyle.setBorderLeft(BorderStyle.THIN);
+            dataStyle.setBorderRight(BorderStyle.THIN);
+
+            String[] headers = {"STT", "Mã TN", "Tên Thánh", "Họ", "Tên", "Ngày Sinh", "Giới Tính", "Ngày Rửa Tội", "Nơi Rửa Tội",
+                    "Ngày Rước Lễ", "Nơi Rước Lễ", "Ngày Thêm Sức", "Nơi Thêm Sức", "Ngày Bao Đồng", "Nơi Bao Đồng",
+                    "Họ Tên Cha", "Họ Tên Mẹ", "SĐT Cha", "SĐT Mẹ", "SĐT Cá Nhân", "Trạng Thái"};
+
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+                sheet.autoSizeColumn(i);
+            }
+
+            ExecutorService executorService = Executors.newFixedThreadPool(10);
+            List<Future<?>> futures = new ArrayList<>();
+
+            int rowIdx = 1;
+            for (Object[] obj : thieuNhiList) {
+                final int currentRowIdx = rowIdx;
+                futures.add(executorService.submit(() -> {
+                    Row row = sheet.createRow(currentRowIdx);
+
+                    // Ghi số thứ tự (STT)
+                    Cell sttCell = row.createCell(0);
+                    sttCell.setCellValue(currentRowIdx);
+                    sttCell.setCellStyle(dataStyle);
+
+                    // Ghi dữ liệu từ obj vào từng cột
+                    for (int i = 0; i < obj.length; i++) {
+                        Cell cell = row.createCell(i + 1); // Dịch cột qua phải 1 đơn vị
+                        if (obj[i] != null) {
+                            if (obj[i] instanceof java.sql.Timestamp) {  // Nếu là kiểu Timestamp
+                                Date date = new Date(((java.sql.Timestamp) obj[i]).getTime());
+                                cell.setCellValue(dateFormat.format(date));
+                            } else if (obj[i] instanceof java.util.Date) {  // Nếu là kiểu Date
+                                cell.setCellValue(dateFormat.format((Date) obj[i]));
+                            } else {
+                                cell.setCellValue(obj[i].toString());
+                            }
+                        }
+                        cell.setCellStyle(dataStyle); // Áp dụng style có border cho ô dữ liệu
+                    }
+                }));
+                rowIdx++;
+            }
+
+            for (Future<?> future : futures) {
+                future.get();
+            }
+
+            executorService.shutdown();
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        } catch (IOException | InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
 }

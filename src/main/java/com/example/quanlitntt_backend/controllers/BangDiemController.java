@@ -426,23 +426,5 @@ public class BangDiemController {
     }
 
 
-    //            boolean kiemTraVaiTro = "HUYNHTRUONG".equals(role) ||
-//                                    "TRUONGNGANH".equals(role) ||
-//                                    "XUDOANTRUONG".equals(role);
-//            if (kiemTraVaiTro &&
-//                lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isPresent()) {
-//                if (lopNamHocService.timTNTheoLopNamHoc(maTN, maLop, namHoc).isEmpty()) {
-//                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                            .body("Thiếu nhi " + maTN + "không thuộc lớp " + maLop + "trong năm học " + namHoc);
-//                } else {
-//                    return ResponseEntity.status(HttpStatus.OK).body(bangDiemService.layBangDiemCuaThieuNhi(maTN));
-//                }
-//            } else {
-//                if (kiemTraVaiTro &&
-//                    lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
-//                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-//                            .body("Chỉ được xem bảng điểm của thiếu nhi thuộc lớp mình quản lý");
-//                }
-//            }
 
 }

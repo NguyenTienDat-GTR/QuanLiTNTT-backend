@@ -6,7 +6,11 @@ import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
 import com.example.quanlitntt_backend.serviceImplements.*;
 import com.example.quanlitntt_backend.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.Disposable;
 
+import java.io.ByteArrayInputStream;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -743,6 +748,138 @@ public class LopNamHocController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa thiếu nhi khỏi lớp " + e.getMessage());
         }
     }
+
+    // lấy danh sách thiếu nhi theo lớp và năm học
+    @GetMapping("/get-danhSachThieuNhi")
+    @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
+    public ResponseEntity<?> layDSThieuNHiByLopAndNamHoc(@RequestParam(defaultValue = "0") int page,
+                                                         @RequestParam(defaultValue = "10") int size,
+                                                         @RequestParam String maLop,
+                                                         @RequestParam String namHoc,
+                                                         @RequestParam(required = false) String maNganh,
+                                                         @RequestHeader("Authorization") String token) {
+        try {
+
+            String jwtToken = token.substring(7);
+            String role = jwtUtil.extractRole(jwtToken);
+            String username = jwtUtil.extractUsername(jwtToken);
+
+            if (lopService.getLopByMaLop(maLop).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp với mã: " + maLop);
+            }
+
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            }
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc) && "HUYNHTRUONG".equals(role))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ được lấy danh sách thiếu nhi của lớp ở năm học hiện tại");
+
+            LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
+
+            if (lopNamHocService.getLopNamHocById(key).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+
+
+            if (maNganh != null) {
+                if (nganhService.getNganhById(maNganh).isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy ngành với mã " + maNganh);
+                }
+
+                if (!lopNamHocService.kiemTraLopThuocNganhNamHoc(maLop, maNganh, namHoc)) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Lớp " + maLop + " không thuộc ngành " + maNganh);
+                }
+
+                if (("TRUONGNGANH".equals(role) || "THUKYNGANH".equals(role))
+                    && lopNamHocService.layHTTheoNganhNamHoc(username, maNganh, namHoc).isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được lấy danh sách thiếu nhi thuộc lớp trong ngành");
+                }
+            }
+
+            if ("HUYNHTRUONG".equals(role) && lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được lấy danh sách Thiếu Nhi thuộc lớp mình quản lí");
+            }
+
+            PageRequest pageRequest = PageRequest.of(page, size);
+
+            return ResponseEntity.status(HttpStatus.OK).body(lopNamHocService.layDSThieuNHiByLopAndNamHoc(maLop, namHoc, pageRequest));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy danh sách thiếu nhi " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/export-danhSachThieuNhi")
+    @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
+    public ResponseEntity<?> exportDSThieuNhiLopToFileExcel(@RequestParam String maLop,
+                                                            @RequestParam String namHoc,
+                                                            @RequestParam(required = false) String maNganh,
+                                                            @RequestHeader("Authorization") String token) {
+
+        try {
+
+            String jwtToken = token.substring(7);
+            String role = jwtUtil.extractRole(jwtToken);
+            String username = jwtUtil.extractUsername(jwtToken);
+
+            if (lopService.getLopByMaLop(maLop).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp với mã: " + maLop);
+            }
+
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            }
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc) && "HUYNHTRUONG".equals(role))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ được lấy danh sách thiếu nhi của lớp ở năm học hiện tại");
+
+            LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
+
+            if (lopNamHocService.getLopNamHocById(key).isEmpty())
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
+
+
+            if (maNganh != null) {
+                if (nganhService.getNganhById(maNganh).isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy ngành với mã " + maNganh);
+                }
+
+                if (!lopNamHocService.kiemTraLopThuocNganhNamHoc(maLop, maNganh, namHoc)) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Lớp " + maLop + " không thuộc ngành " + maNganh);
+                }
+
+                if (("TRUONGNGANH".equals(role) || "THUKYNGANH".equals(role))
+                    && lopNamHocService.layHTTheoNganhNamHoc(username, maNganh, namHoc).isEmpty()) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được lấy danh sách thiếu nhi thuộc lớp trong ngành");
+                }
+            }
+
+            if ("HUYNHTRUONG".equals(role) && lopNamHocService.timHTTheoLopNamHoc(username, maLop, namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Chỉ được lấy danh sách Thiếu Nhi thuộc lớp mình quản lí");
+            }
+
+
+            ByteArrayInputStream in = lopNamHocService.exportDSThieuNhiLopToFileExcel(maLop, namHoc);
+
+            if (in == null) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            }
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Disposition", "attachment; filename=ds_thieuNhi_" + maLop + "_" + namHoc + ".xlsx");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(new InputStreamResource(in));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy danh sách thiếu nhi " + e.getMessage());
+        }
+    }
+
 }
 
 

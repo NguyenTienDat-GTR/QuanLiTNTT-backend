@@ -2,6 +2,8 @@ package com.example.quanlitntt_backend.repositories;
 
 import com.example.quanlitntt_backend.entities.*;
 import com.example.quanlitntt_backend.entities.compositeKey.LopNamHocKey;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -197,4 +199,43 @@ public interface LopNamHocRepository extends JpaRepository<LopNamHoc, LopNamHocK
                    "WHERE tn.matn = :maTN AND lnh.nam_hoc = :namHoc AND ng.ma_nganh = :maNganh",
             nativeQuery = true)
     int kiemTraThieuNhiThuocNganh(@Param("maTN") String maTN, @Param("namHoc") String namHoc, @Param("maNganh") String maNganh);
+
+    /*
+     * Lấy danh sách thiếu nhi cu 1 lớp trong 1 năm học
+     * @Param String maLop
+     * @Param String namHoc
+     * @Param Pageable
+     */
+    @Query(value = "SELECT tn.matn, tn.ten_thanh, tn.ho, tn.ten, tn.ngay_sinh, tn.gioi_tinh, tn.ngay_rua_toi, tn.noi_rua_toi, " +
+                   "tn.ngay_ruoc_le, tn.noi_ruoc_le, tn.ngay_them_suc, tn.noi_them_suc, tn.ngay_bao_dong, tn.noi_bao_dong, " +
+                   "tn.ho_ten_cha, tn.ho_ten_me, tn.so_dien_thoai_cha, tn.so_dien_thoai_me, tn.so_dien_thoai_ca_nhan, tn.trang_thai " +
+                   "FROM thieu_nhi tn " +
+                   "JOIN lop_nam_hoc_thieu_nhi ltn ON tn.matn = ltn.matn " +
+                   "JOIN lop_nam_hoc lnh ON ltn.ma_lop = lnh.ma_lop AND ltn.nam_hoc = lnh.nam_hoc " +
+                   "WHERE lnh.ma_lop = :maLop AND lnh.nam_hoc = :namHoc " +
+                   "order by ten ASC ",
+            countQuery = "SELECT COUNT(tn.matn) FROM thieu_nhi tn " +
+                         "JOIN lop_nam_hoc_thieu_nhi ltn ON tn.matn = ltn.matn " +
+                         "JOIN lop_nam_hoc lnh ON ltn.ma_lop = lnh.ma_lop AND ltn.nam_hoc = lnh.nam_hoc " +
+                         "WHERE lnh.ma_lop = :maLop AND lnh.nam_hoc = :namHoc",
+            nativeQuery = true)
+    Page<Object[]> layDSThieuNhiByLopAndNamHoc(@Param("maLop") String maLop,
+                                               @Param("namHoc") String namHoc,
+                                               Pageable pageable);
+
+    /*
+     * Lấy danh sách thiếu nhi cu 1 lớp trong 1 năm học
+     * @Param String maLop
+     * @Param String namHoc
+     */
+    @Query(value = "SELECT tn.matn, tn.ten_thanh, tn.ho, tn.ten, tn.ngay_sinh, tn.gioi_tinh, tn.ngay_rua_toi, tn.noi_rua_toi, " +
+                   "tn.ngay_ruoc_le, tn.noi_ruoc_le, tn.ngay_them_suc, tn.noi_them_suc, tn.ngay_bao_dong, tn.noi_bao_dong, " +
+                   "tn.ho_ten_cha, tn.ho_ten_me, tn.so_dien_thoai_cha, tn.so_dien_thoai_me, tn.so_dien_thoai_ca_nhan, tn.trang_thai " +
+                   "FROM thieu_nhi tn " +
+                   "JOIN lop_nam_hoc_thieu_nhi ltn ON tn.matn = ltn.matn " +
+                   "JOIN lop_nam_hoc lnh ON ltn.ma_lop = lnh.ma_lop AND ltn.nam_hoc = lnh.nam_hoc " +
+                   "WHERE lnh.ma_lop = :maLop AND lnh.nam_hoc = :namHoc " +
+                   "order by ten ASC ",
+            nativeQuery = true)
+    List<Object[]> layDSThieuNhiByLopAndNamHocToExport(@Param("maLop") String maLop, @Param("namHoc") String namHoc);
 }
