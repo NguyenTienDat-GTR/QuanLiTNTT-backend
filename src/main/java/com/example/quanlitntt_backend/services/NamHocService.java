@@ -16,4 +16,6 @@ public interface NamHocService {
     public List<NamHoc> getAllNamHoc();
 
     public Optional<NamHoc> getNamHocById(String namHoc);
+
+    public boolean kiemTraNamHocHienTai(String namHoc);
 }

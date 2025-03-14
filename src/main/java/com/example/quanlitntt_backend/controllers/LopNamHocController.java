@@ -61,6 +61,9 @@ public class LopNamHocController {
             if (nam.isEmpty())
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học " + namHoc);
 
+            if (!nam.get().isNamHienTai())
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Chỉ được thêm lớp vào năm học hiện tại");
+
             for (String ma : maLop) {
 
                 Optional<Lop> lop = lopService.getLopByMaLop(ma);
@@ -110,6 +113,10 @@ public class LopNamHocController {
             if (namHocService.getNamHocById(namHoc).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
             }
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Chỉ được thêm huynh trưởng cho năm học hiện tại");
+
 
             LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
 
@@ -171,6 +178,9 @@ public class LopNamHocController {
             if (namHocService.getNamHocById(namHoc).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
             }
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Chỉ được lấy huynh trưởng của năm học hiện tại");
 
             LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
 
@@ -242,6 +252,9 @@ public class LopNamHocController {
             if (namHocService.getNamHocById(namHoc).isEmpty())
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học " + namHoc);
 
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Chỉ được thêm thiếu nhi cho năm học hiện tại");
+
             LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
 
             if (lopNamHocService.getLopNamHocById(key).isEmpty())
@@ -311,6 +324,9 @@ public class LopNamHocController {
             if (namHocService.getNamHocById(namHoc).isEmpty())
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học " + namHoc);
 
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Chỉ được thêm thiếu nhi cho năm học hiện tại");
+
             LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
 
             if (lopNamHocService.getLopNamHocById(key).isEmpty())
@@ -378,6 +394,9 @@ public class LopNamHocController {
             if (namHocService.getNamHocById(namHoc).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học " + namHoc);
             }
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Chỉ được thêm thiếu nhi cho năm học hiện tại");
 
             LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
 
@@ -479,6 +498,10 @@ public class LopNamHocController {
                         .body("Không tìm thấy năm học: " + namHoc);
             }
 
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).
+                        body("Chỉ được xóa huynh trưởng ra khỏi lớp ở năm học hiện tại");
+
             LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
 
             if (lopNamHocService.getLopNamHocById(key).isEmpty())
@@ -554,6 +577,10 @@ public class LopNamHocController {
                                                        @RequestParam String maLopMoi,
                                                        @RequestParam String namHoc) {
         try {
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Chỉ được chuyển lớp ở năm học hiện tại");
+
             // Kiểm tra lớp cũ và lớp mới có tồn tại không
             if (lopService.getLopByMaLop(maLopCu).isEmpty() || lopService.getLopByMaLop(maLopMoi).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy lớp học");
@@ -593,8 +620,8 @@ public class LopNamHocController {
                     boolean result = lopNamHocService.chuyenThieuNhiSangLopKhac(maThieuNhi, maLopCu, maLopMoi, namHoc);
                     if (result) {
                         thanhCong.add("Chuyển Thiếu Nhi mã " + maThieuNhi + " thành công.");
-                        bangDiemService.xoaBangDiem(maThieuNhi,maLopCu,namHoc);
-                        bangDiemService.taoBangDiem(maThieuNhi,maLopMoi,namHoc);
+                        bangDiemService.xoaBangDiem(maThieuNhi, maLopCu, namHoc);
+                        bangDiemService.taoBangDiem(maThieuNhi, maLopMoi, namHoc);
                     } else {
                         thatBai.add("Không thể chuyển Thiếu Nhi mã " + maThieuNhi);
                     }
@@ -645,6 +672,10 @@ public class LopNamHocController {
             if (namHocService.getNamHocById(namHoc).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
             }
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ được xóa thiếu nhi ra khỏi lớp ở năm học hiện tại");
 
             LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
 

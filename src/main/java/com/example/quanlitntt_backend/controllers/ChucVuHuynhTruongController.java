@@ -54,6 +54,11 @@ public class ChucVuHuynhTruongController {
                 return ResponseEntity.badRequest().body("Không tìm thấy năm học " + chucVuHuynhTruongDto.getNamHoc());
             }
 
+
+            if (!namHocService.kiemTraNamHocHienTai(chucVuHuynhTruongDto.getNamHoc()))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ được thêm chức vụ cho huynh trưởng ở năm học hiện tại");
+
             if (chucVuHuynhTruongService.existsByHuynhTruongAndNamHoc(chucVuHuynhTruongDto.getMaHT(), chucVuHuynhTruongDto.getNamHoc())) {
                 return ResponseEntity.badRequest().body("Huynh trưởng với mã " + chucVuHuynhTruongDto.getMaHT() + " đã có chức vụ trong năm học " + chucVuHuynhTruongDto.getNamHoc());
             }
@@ -82,6 +87,10 @@ public class ChucVuHuynhTruongController {
             if (namHocService.getNamHocById(chucVuHuynhTruongDto.getNamHoc()).isEmpty()) {
                 return ResponseEntity.badRequest().body("Không tìm thấy năm học " + chucVuHuynhTruongDto.getNamHoc());
             }
+
+            if (!namHocService.kiemTraNamHocHienTai(chucVuHuynhTruongDto.getNamHoc()))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ được cập nhật chức vụ cho huynh trưởng ở năm học hiện tại");
 
             if (chucVuService.getChucVuByMa(chucVuHuynhTruongDto.getMaChucVu()).isEmpty()) {
                 return ResponseEntity.badRequest().body("Không tìm thấy chức vụ với mã " + chucVuHuynhTruongDto.getMaChucVu());

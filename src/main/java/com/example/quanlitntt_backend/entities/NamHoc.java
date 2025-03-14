@@ -44,4 +44,7 @@ public class NamHoc {
     @OneToMany(mappedBy = "namHoc", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<ChucVuHuynhTruong> chucVuHuynhTruongList = new ArrayList<>();
 
+    @Column(name = "namHienTai", columnDefinition = "BOOLEAN DEFAULT true")
+    private boolean namHienTai;
+
 }

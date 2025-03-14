@@ -40,8 +40,12 @@ public class NamHocServiceImpl implements NamHocService {
         cal.setTime(ngayKetThuc);
         int namKetThuc = cal.get(Calendar.YEAR);
 
+        namHoc.setNamHienTai(true);
+
         // Tạo chuỗi namHoc theo định dạng XXXX-YYYY
         namHoc.setNamHoc(namBatDau + "-" + namKetThuc);
+
+        namHocRepository.suaNamHocThanhQuaKhu();
 
         return namHocRepository.save(namHoc);
     }
@@ -77,4 +81,11 @@ public class NamHocServiceImpl implements NamHocService {
 
         return Optional.empty();
     }
+
+    @Override
+    public boolean kiemTraNamHocHienTai(String namHoc) {
+        Optional<NamHoc> namHocOptional = namHocRepository.findById(namHoc);
+        return namHocOptional.map(NamHoc::isNamHienTai).orElse(false);
+    }
+
 }

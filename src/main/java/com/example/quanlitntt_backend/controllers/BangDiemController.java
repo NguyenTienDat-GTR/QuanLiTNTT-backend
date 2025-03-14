@@ -45,6 +45,9 @@ public class BangDiemController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private NamHocServiceImpl namHocService;
+
     @PostMapping("/create")
     @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
     public ResponseEntity<?> createBangDiem(@RequestBody List<String> dsMaTN,
@@ -61,6 +64,14 @@ public class BangDiemController {
 
             // Lấy username từ token
             String username = jwtUtil.extractUsername(jwtToken);
+
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            }
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ được tạo bảng điểm ở năm học hiện tại");
 
             LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
 
@@ -161,6 +172,14 @@ public class BangDiemController {
             String role = jwtUtil.extractRole(jwtToken);
             String username = jwtUtil.extractUsername(jwtToken);
             LopNamHocKey key = new LopNamHocKey(maLop, namHoc);
+
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            }
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ được cập nhật bảng điểm ở năm học hiện tại");
 
             if (lopNamHocService.getLopNamHocById(key).isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -281,6 +300,14 @@ public class BangDiemController {
                         .body("Không tìm thấy lớp " + maLop + " trong năm học " + namHoc);
             }
 
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            }
+
+            if (!namHocService.kiemTraNamHocHienTai(namHoc) && "HUYNHTRUONG".equals(role))
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Chỉ được xem bảng điểm ở năm học hiện tại");
+
             if (!("ADMIN".equals(role) ||
                   "XUDOANTRUONG".equals(role) ||
                   "THUKY".equals(role)) &&
@@ -301,8 +328,9 @@ public class BangDiemController {
         }
     }
 
+    // lấy tất cả bảng điểm của 1 thiếu nhi
     @GetMapping("/getAll-bangDiem-thieuNhi")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyRole('ADMIN','THUKY','THUKYNGANH','THIEUNHI')")
     public ResponseEntity<?> layBangDiemCuaThieuNhi(@RequestParam(required = false) String maLop,
                                                     @RequestParam(required = false) String namHoc,
                                                     @RequestParam(required = false) String maTN,
@@ -312,6 +340,10 @@ public class BangDiemController {
             String jwtToken = token.substring(7);
             String role = jwtUtil.extractRole(jwtToken);
             String username = jwtUtil.extractUsername(jwtToken);
+
+            if (namHocService.getNamHocById(namHoc).isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy năm học: " + namHoc);
+            }
 
             if ("THIEUNHI".equals(role)) {
                 return ResponseEntity.ok(bangDiemService.layBangDiemCuaThieuNhi(username));
@@ -387,7 +419,6 @@ public class BangDiemController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy bảng điểm. " + e.getMessage());
         }
     }
-
 
 
     //            boolean kiemTraVaiTro = "HUYNHTRUONG".equals(role) ||
