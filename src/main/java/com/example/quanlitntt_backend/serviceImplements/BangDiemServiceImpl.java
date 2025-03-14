@@ -248,14 +248,18 @@ public class BangDiemServiceImpl implements BangDiemService {
 
         BangDiem bangDiem = bangDiemOptional.get();
 
-        // Cập nhật các giá trị, đảm bảo null cho `diemKT_HKI` và `diemKT_HKII`
+        //điểm học kì I
         bangDiem.setDiemKT_HKI(bangDiemDto.getDiemKT_HKI() != null && bangDiemDto.getDiemKT_HKI() >= 0 ? bangDiemDto.getDiemKT_HKI() : null);
-        bangDiem.setDiemKT_HKII(bangDiemDto.getDiemKT_HKII() != null && bangDiemDto.getDiemKT_HKII() >= 0 ? bangDiemDto.getDiemKT_HKII() : null);
-
-        // Các điểm khác mặc định là 0 nếu null
         bangDiem.setDiemThiGL_HKI(bangDiemDto.getDiemThiGL_HKI() >= 0 ? bangDiemDto.getDiemThiGL_HKI() : null);
         bangDiem.setDiemThiTN_HKI(bangDiemDto.getDiemThiTN_HKI() >= 0 ? bangDiemDto.getDiemThiTN_HKI() : null);
 
+
+        if (bangDiemOptional.get().getDiemTB_HKI() == null) {
+            throw new RuntimeException("Phải có điểm trung bình học kì I mới được phép nhập điểm học kì II");
+        }
+
+        // điểm học kì II
+        bangDiem.setDiemKT_HKII(bangDiemDto.getDiemKT_HKII() != null && bangDiemDto.getDiemKT_HKII() >= 0 ? bangDiemDto.getDiemKT_HKII() : null);
         bangDiem.setDiemThiGL_HKII(bangDiemDto.getDiemThiGL_HKII() >= 0 ? bangDiemDto.getDiemThiGL_HKII() : null);
         bangDiem.setDiemThiTN_HKII(bangDiemDto.getDiemThiTN_HKII() >= 0 ? bangDiemDto.getDiemThiTN_HKII() : null);
 
