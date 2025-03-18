@@ -5,6 +5,7 @@ import com.example.quanlitntt_backend.entities.HuynhTruong;
 import com.example.quanlitntt_backend.entities.enums.CapSao;
 import com.example.quanlitntt_backend.serviceImplements.HuynhTruongServiceImpl;
 import com.example.quanlitntt_backend.serviceImplements.TaiKhoanServiceImpl;
+import com.example.quanlitntt_backend.utils.WasabiService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,8 +16,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+
 
 @RequestMapping("/api/huynhtruong")
 @RestController
@@ -26,6 +30,9 @@ public class HuynhTruongController {
 
     @Autowired
     private TaiKhoanServiceImpl taiKhoanService;
+
+    @Autowired
+    private WasabiService wasabiService;
 
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
@@ -209,6 +216,28 @@ public class HuynhTruongController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi kích hoạt Huynh Trưởng: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/upload-avatar")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> uploadAvatarInDirectory(@RequestParam("folderPath") String folderPath) {
+        try {
+
+            // Decode URL nếu cần thiết
+            String decodedFolderPath = URLDecoder.decode(folderPath, StandardCharsets.UTF_8);
+
+            CompletableFuture<List<Map<String, String>>> uploadFuture = huynhTruongService.uploadAvatarInDirectory(decodedFolderPath);
+            List<Map<String, String>> errors = uploadFuture.join();
+
+            if (errors.isEmpty()) {
+                return ResponseEntity.ok("Upload avatar thành công.");
+            } else {
+                return ResponseEntity.ok(errors);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi upload ảnh: " + e.getMessage());
         }
     }
 

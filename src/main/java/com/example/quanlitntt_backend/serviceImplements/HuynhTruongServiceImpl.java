@@ -10,6 +10,7 @@ import com.example.quanlitntt_backend.services.HuynhTruongService;
 import com.example.quanlitntt_backend.utils.DateUtil;
 import com.example.quanlitntt_backend.utils.ExcelUtil;
 import com.example.quanlitntt_backend.utils.GenerateMa;
+import com.example.quanlitntt_backend.utils.WasabiService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,15 +20,24 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
+
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static com.example.quanlitntt_backend.utils.ExcelUtil.getDateCellValue;
 
 @Service
 public class HuynhTruongServiceImpl implements HuynhTruongService {
@@ -37,6 +47,14 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
 
     @Autowired
     private TaiKhoanRepository taiKhoanRepository;
+
+    @Autowired
+    private WasabiService wasabiService;
+
+    private static final Logger logger = Logger.getLogger(HuynhTruongServiceImpl.class.getName());
+
+    private final ExecutorService executor = Executors.newFixedThreadPool(10); // Tối ưu hóa bằng cách sử dụng 10 luồng
+
 
     private final GenerateMa generateMa = new GenerateMa();
 
@@ -250,7 +268,6 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
         });
     }
 
-
     @Override
     public Page<HuynhTruong> getHuynhTruongByCapSao(CapSao capSao, Pageable pageable) {
 
@@ -290,5 +307,112 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
         return null;
     }
 
+    @Override
+    public CompletableFuture<List<Map<String, String>>> uploadAvatarInDirectory(String directoryPath) {
+        File folder = new File(directoryPath);
+        File[] files = folder.listFiles();
+
+        if (files == null || files.length == 0) {
+            logger.warning("Không tìm thấy file ảnh nào trong thư mục.");
+            Map<String, String> errorMap = new HashMap<>();
+            errorMap.put("error", "Thư mục trống hoặc không tồn tại.");
+            return CompletableFuture.completedFuture(List.of(errorMap));
+        }
+
+        List<CompletableFuture<Map<String, String>>> futures = new ArrayList<>();
+
+        for (File file : files) {
+            if (file.isFile() && isImageFile(file)) {
+                futures.add(CompletableFuture.supplyAsync(() -> processAndUploadImage(file), executor));
+            }
+        }
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> futures.stream()
+                        .map(CompletableFuture::join)
+                        .filter(map -> !map.isEmpty()) // Lọc bỏ các map rỗng (thành công)
+                        .collect(Collectors.toList())
+                );
+    }
+
+    private Map<String, String> processAndUploadImage(File file) {
+        Map<String, String> resultMap = new HashMap<>();
+        try {
+            String maHT = file.getName().substring(0, file.getName().lastIndexOf("."));
+            Optional<HuynhTruong> huynhTruongOptional = huynhTruongRepository.findById(maHT);
+
+            if (huynhTruongOptional.isEmpty()) {
+                resultMap.put("error", "Không tìm thấy HuynhTruong với mã: " + maHT);
+                return resultMap;
+            }
+
+            byte[] jpegData = convertImageToJpeg(file);
+
+            if (jpegData != null) {
+                String fileName = "avatar_HT/" + maHT;
+
+                // Thực hiện upload lên Wasabi
+                wasabiService.uploadFile(fileName, jpegData);
+
+                // Lưu URL vào database
+                String presignedUrl = wasabiService.generatePreSignedUrl(fileName);
+                HuynhTruong huynhTruong = huynhTruongOptional.get();
+                huynhTruong.setHinhAnh(presignedUrl);
+                huynhTruongRepository.save(huynhTruong);
+            }
+        } catch (IOException e) {
+            resultMap.put("error", "Lỗi khi upload ảnh: " + file.getName() + " - " + e.getMessage());
+        }
+        return resultMap;
+    }
+
+    private boolean isImageFile(File file) {
+        String[] imageExtensions = {"jpg", "jpeg", "png", "bmp", "gif"};
+        String fileName = file.getName().toLowerCase();
+
+        for (String extension : imageExtensions) {
+            if (fileName.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private byte[] convertImageToJpeg(File file) throws IOException {
+        String fileExtension = getFileExtension(file.getName()).toLowerCase();
+
+        // Các định dạng ảnh hợp lệ cần chuyển đổi
+        List<String> validExtensions = Arrays.asList("jpg", "jpeg", "png", "bmp", "gif");
+
+        if (!validExtensions.contains(fileExtension)) {
+            throw new IOException("Định dạng ảnh không được hỗ trợ: " + fileExtension);
+        }
+
+        BufferedImage image = ImageIO.read(file);
+
+        if (image == null) {
+            throw new IOException("Không thể đọc được ảnh hoặc định dạng không được hỗ trợ: " + file.getName());
+        }
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        try {
+            // Lưu ảnh dưới định dạng JPEG
+            ImageIO.write(image, "jpeg", outputStream);
+            return outputStream.toByteArray();
+        } catch (IOException e) {
+            throw new IOException("Lỗi khi chuyển đổi ảnh sang JPEG: " + e.getMessage());
+        }
+    }
+
+
+    // Hàm hỗ trợ lấy phần mở rộng của file
+    private String getFileExtension(String fileName) {
+        int lastIndexOfDot = fileName.lastIndexOf(".");
+        if (lastIndexOfDot == -1) {
+            return ""; // Không tìm thấy phần mở rộng
+        }
+        return fileName.substring(lastIndexOfDot + 1);
+    }
 
 }

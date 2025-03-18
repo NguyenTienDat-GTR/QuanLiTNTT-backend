@@ -55,7 +55,7 @@ public class HuynhTruong {
     @NotNull(message = "Giới tính không được để trống")
     private GioiTinh gioiTinh;
 
-    @Column(name = "hinhAnh")
+    @Column(name = "hinhAnh", length = 1000)
     @NotNull(message = "Hình ảnh không được để trống")
     private String hinhAnh;
 
