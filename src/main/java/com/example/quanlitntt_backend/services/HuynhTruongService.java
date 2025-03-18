@@ -45,4 +45,6 @@ public interface HuynhTruongService {
     // upload avatar từ việc chọn 1 ảnh cho 1 huynh trưởng
     public CompletableFuture<Map<String, String>> uploadAvatar(MultipartFile file, String maHT, String folderName);
 
+    public CompletableFuture<Void> generateAndUploadQRCode(String maHT) throws Exception;
+
 }

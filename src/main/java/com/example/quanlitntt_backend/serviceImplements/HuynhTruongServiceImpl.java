@@ -7,13 +7,12 @@ import com.example.quanlitntt_backend.entities.enums.GioiTinh;
 import com.example.quanlitntt_backend.repositories.HuynhTruongRepository;
 import com.example.quanlitntt_backend.repositories.TaiKhoanRepository;
 import com.example.quanlitntt_backend.services.HuynhTruongService;
+import com.example.quanlitntt_backend.utils.*;
 import com.example.quanlitntt_backend.utils.DateUtil;
-import com.example.quanlitntt_backend.utils.ExcelUtil;
-import com.example.quanlitntt_backend.utils.GenerateMa;
-import com.example.quanlitntt_backend.utils.WasabiService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
@@ -47,6 +46,8 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
     @Autowired
     private WasabiService wasabiService;
 
+    private final QRCodeUtil qrCodeUtil = new QRCodeUtil();
+
     private static final Logger logger = Logger.getLogger(HuynhTruongServiceImpl.class.getName());
 
     private final ExecutorService executor = Executors.newFixedThreadPool(10); // Tối ưu hóa bằng cách sử dụng 10 luồng
@@ -54,6 +55,8 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
 
     private final GenerateMa generateMa = new GenerateMa();
 
+    @Value("${IP_ADDRESS}")
+    private String ipAddress;
 
     @Override
     public HuynhTruong addHuynhTruong(HuynhTruongDto huynhTruongDTO) {
@@ -199,7 +202,7 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
 
     @Async("asyncExecutor")
     public CompletableFuture<Void> processBatch(List<Row> rows) {
-        List<HuynhTruongDto> danhSachHuynhTruong = new ArrayList<>();
+        List<HuynhTruong> danhSachDaLuu = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
 
         for (Row row : rows) {
@@ -228,17 +231,35 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
                 dto.setCapSao(CapSao.valueOf(capSaoStr));
 
                 dto.setHoatDong(true);
-                danhSachHuynhTruong.add(dto);
+                HuynhTruong huynhTruong = ExcelUtil.convertFileHuynhTruongToEntity(dto);
+                danhSachDaLuu.add(huynhTruong);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        // Lưu danh sách vào database
-        if (!danhSachHuynhTruong.isEmpty()) {
-            huynhTruongRepository.saveAll(danhSachHuynhTruong.stream()
-                    .map(ExcelUtil::convertFileHuynhTruongToEntity)
-                    .collect(Collectors.toList()));
+        if (!danhSachDaLuu.isEmpty()) {
+            List<HuynhTruong> savedHuynhTruongs = huynhTruongRepository.saveAll(danhSachDaLuu);
+
+            // Tạo ExecutorService để giới hạn số luồng chạy song song
+            ExecutorService executor = Executors.newFixedThreadPool(10);
+
+            // Duyệt qua từng HuynhTruong và tạo QR code bất đồng bộ
+            List<CompletableFuture<Void>> qrCodeFutures = savedHuynhTruongs.stream()
+                    .map(huynhTruong -> CompletableFuture.runAsync(() -> {
+                        try {
+                            generateAndUploadQRCode(huynhTruong.getMaHT());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }, executor))
+                    .toList();
+
+            // Chờ tất cả các QR code được tạo xong
+            CompletableFuture.allOf(qrCodeFutures.toArray(new CompletableFuture[0])).join();
+
+            // Tắt ExecutorService sau khi hoàn thành
+            executor.shutdown();
         }
 
         return CompletableFuture.completedFuture(null);
@@ -464,5 +485,30 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
             resultMap.put("error", "Lỗi khi upload ảnh: " + file.getOriginalFilename() + " - " + e.getMessage());
         }
         return CompletableFuture.completedFuture(resultMap);
+    }
+
+    @Override
+    public CompletableFuture<Void> generateAndUploadQRCode(String maHT) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                String qrContent = ipAddress + "/api/huynhtruong/getByMa/" + maHT;
+                byte[] qrImage = qrCodeUtil.generateQRCodeImage(qrContent, 300, 300);
+                String qr_url = wasabiService.checkAndReplaceFile(maHT, qrImage, "qr_HT/");
+
+                HuynhTruong huynhTruong = huynhTruongRepository.findById(maHT).orElseThrow(() ->
+                        new RuntimeException("Không tìm thấy HuynhTruong với mã: " + maHT));
+
+                if (qr_url == null) {
+                    throw new RuntimeException("Lỗi khi upload QR code cho mã " + maHT);
+                }
+
+                String presignedUrl = wasabiService.generatePreSignedUrl(qr_url);
+
+                huynhTruong.setQr_code(presignedUrl);
+                huynhTruongRepository.save(huynhTruong);
+            } catch (Exception e) {
+                throw new RuntimeException("Lỗi khi tạo QR code cho mã " + maHT + ": " + e.getMessage(), e);
+            }
+        });
     }
 }

@@ -50,6 +50,7 @@ public class HuynhTruongController {
             }
 
             HuynhTruong newHuynhTruong = huynhTruongService.addHuynhTruong(huynhTruongDTO);
+            huynhTruongService.generateAndUploadQRCode(newHuynhTruong.getMaHT());
             return ResponseEntity.status(HttpStatus.CREATED).body(newHuynhTruong);
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -181,9 +182,9 @@ public class HuynhTruongController {
     }
 
 
-    @GetMapping("/getByMa")
-    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
-    public ResponseEntity<?> getHuynhTruongByMa(@RequestParam String maHT) {
+    @GetMapping("/getByMa/{maHT}")
+    @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
+    public ResponseEntity<?> getHuynhTruongByMa(@PathVariable("maHT") String maHT) {
         try {
             return huynhTruongService.getHuynhTruongByMa(maHT)
                     .map(ResponseEntity::ok)
@@ -250,6 +251,44 @@ public class HuynhTruongController {
             return ResponseEntity.ok(uploadFuture.join());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi upload ảnh: " + e.getMessage());
+        }
+    }
+
+    // Generate and upload QR code
+    @CrossOrigin(origins = "*")
+    @PostMapping("/create-qrcode")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> generateAndUploadQRCode(@RequestBody List<String> dsMaHT) {
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        try {
+            for (String maHT : dsMaHT) {
+                if (huynhTruongService.getHuynhTruongByMa(maHT).isEmpty()) {
+                    errors.add("Không tìm thấy HuynhTruong với mã: " + maHT);
+                    continue;
+                }
+
+                CompletableFuture<Void> future = huynhTruongService.generateAndUploadQRCode(maHT)
+                        .exceptionally(ex -> {
+                            errors.add(ex.getMessage());
+                            return null;
+                        });
+
+                futures.add(future);
+            }
+
+            // Chờ tất cả các tác vụ hoàn thành
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            if (errors.isEmpty()) {
+                return ResponseEntity.ok("Tạo và upload QR code thành công");
+            } else {
+                return ResponseEntity.ok(errors);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi tạo và upload QR code: " + e.getMessage());
         }
     }
 

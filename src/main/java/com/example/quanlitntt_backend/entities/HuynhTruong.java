@@ -42,7 +42,7 @@ public class HuynhTruong {
 
     @Column(name = "ngaySinh")
     @NotNull(message = "Ngày sinh không được để trống")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "Asia/Ho_Chi_Minh")
 //    @JsonDeserialize(using = LocalDateDeserializer.class)
     private Date ngaySinh;
 
@@ -64,7 +64,7 @@ public class HuynhTruong {
     @Pattern(regexp = "0[0-9]{9}", message = "Số điện thoại không hợp lệ")
     private String soDienThoai;
 
-    @Column(name = "email",unique = true)
+    @Column(name = "email", unique = true)
     @NotNull(message = "Email không được để trống")
     @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Email không hợp lệ")
     private String email;
@@ -77,6 +77,10 @@ public class HuynhTruong {
     @Column(name = "hoatDong", nullable = false, columnDefinition = "boolean default true")
     @NotNull(message = "Trạng thái không được để trống")
     private boolean hoatDong = true;
+
+    @Column(name = "qr_code", length = 1000)
+    @NotNull(message = "QR_code không được để trống")
+    private String qr_code;
 
     @OneToMany(mappedBy = "huynhTruong", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ChucVuHuynhTruong> chucVuHuynhTruongList = new ArrayList<>();
