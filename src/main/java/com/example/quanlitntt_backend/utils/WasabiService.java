@@ -106,4 +106,36 @@ public class WasabiService {
         URL presignedUrl = presigner.presignGetObject(presignRequest).url();
         return presignedUrl.toString();
     }
+
+    // Kiểm tra và thay thế file đã tồn tại trên Wasabi
+    public String checkAndReplaceFile(String maHT, byte[] fileData) throws IOException {
+        String folder = "avatar_HT/";
+        String fileName = folder + maHT;
+
+        // Kiểm tra xem file có tồn tại không
+        try {
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileName)
+                    .build();
+
+            s3Client.headObject(headObjectRequest);
+
+            // Nếu không ném ra lỗi thì file đã tồn tại -> Tiến hành xóa file cũ
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileName)
+                    .build();
+
+            s3Client.deleteObject(deleteObjectRequest);
+        } catch (NoSuchKeyException e) {
+            // File không tồn tại, không cần xóa
+        } catch (S3Exception e) {
+            throw new RuntimeException("Lỗi khi kiểm tra file trên Wasabi: " + e.awsErrorDetails().errorMessage());
+        }
+
+        // Upload file mới lên
+        return uploadFile(fileName, fileData);
+    }
+
 }

@@ -241,5 +241,16 @@ public class HuynhTruongController {
         }
     }
 
+    // Upload avatar từ việc chọn 1 ảnh cho 1 huynh trưởng
+    @PostMapping("/upload-avatar/{maHT}")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file, @PathVariable String maHT) {
+        try {
+            CompletableFuture<Map<String, String>> uploadFuture = huynhTruongService.uploadAvatar(file, maHT);
+            return ResponseEntity.ok(uploadFuture.join());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi upload ảnh: " + e.getMessage());
+        }
+    }
 
 }

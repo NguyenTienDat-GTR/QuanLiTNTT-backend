@@ -349,13 +349,13 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
             byte[] jpegData = convertImageToJpeg(file);
 
             if (jpegData != null) {
-                String fileName = "avatar_HT/" + maHT;
+                String uploadedFileName = wasabiService.checkAndReplaceFile(maHT, jpegData);
 
                 // Thực hiện upload lên Wasabi
-                wasabiService.uploadFile(fileName, jpegData);
+//                wasabiService.uploadFile(fileName, jpegData);
 
                 // Lưu URL vào database
-                String presignedUrl = wasabiService.generatePreSignedUrl(fileName);
+                String presignedUrl = wasabiService.generatePreSignedUrl(uploadedFileName);
                 HuynhTruong huynhTruong = huynhTruongOptional.get();
                 huynhTruong.setHinhAnh(presignedUrl);
                 huynhTruongRepository.save(huynhTruong);
@@ -366,15 +366,24 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
         return resultMap;
     }
 
-    private boolean isImageFile(File file) {
+    private boolean isImageFile(Object file) {
         String[] imageExtensions = {"jpg", "jpeg", "png", "bmp", "gif"};
-        String fileName = file.getName().toLowerCase();
+        String fileName = null;
 
-        for (String extension : imageExtensions) {
-            if (fileName.endsWith(extension)) {
-                return true;
+        if (file instanceof File) {
+            fileName = ((File) file).getName().toLowerCase();
+        } else if (file instanceof MultipartFile) {
+            fileName = ((MultipartFile) file).getOriginalFilename().toLowerCase();
+        }
+
+        if (fileName != null) {
+            for (String extension : imageExtensions) {
+                if (fileName.endsWith(extension)) {
+                    return true;
+                }
             }
         }
+
         return false;
     }
 
@@ -405,7 +414,6 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
         }
     }
 
-
     // Hàm hỗ trợ lấy phần mở rộng của file
     private String getFileExtension(String fileName) {
         int lastIndexOfDot = fileName.lastIndexOf(".");
@@ -415,4 +423,50 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
         return fileName.substring(lastIndexOfDot + 1);
     }
 
+    // Hàm upload ảnh từ việc chọn 1 ảnh cho 1 huynh trưởng
+    @Override
+    public CompletableFuture<Map<String, String>> uploadAvatar(MultipartFile file, String maHT) {
+        Map<String, String> resultMap = new HashMap<>();
+        try {
+            Optional<HuynhTruong> huynhTruongOptional = huynhTruongRepository.findById(maHT);
+
+            if (huynhTruongOptional.isEmpty()) {
+                resultMap.put("error", "Không tìm thấy HuynhTruong với mã: " + maHT);
+                return CompletableFuture.completedFuture(resultMap);
+            }
+
+            // Kiểm tra định dạng file được hỗ trợ
+            if (!isImageFile(file)) {
+                resultMap.put("error", "File không phải là ảnh hoặc định dạng không được hỗ trợ.");
+                return CompletableFuture.completedFuture(resultMap);
+            }
+
+            // Chuyển MultipartFile thành BufferedImage
+            BufferedImage image = ImageIO.read(file.getInputStream());
+
+            if (image == null) {
+                resultMap.put("error", "Không thể đọc được file ảnh.");
+                return CompletableFuture.completedFuture(resultMap);
+            }
+
+            // Chuyển ảnh về định dạng JPEG
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ImageIO.write(image, "jpeg", outputStream);
+            byte[] jpegData = outputStream.toByteArray();
+
+            // Upload ảnh lên Wasabi
+            String uploadedFileName = wasabiService.checkAndReplaceFile(maHT, jpegData);
+
+            // Lưu URL vào database
+            String presignedUrl = wasabiService.generatePreSignedUrl(uploadedFileName);
+            HuynhTruong huynhTruong = huynhTruongOptional.get();
+            huynhTruong.setHinhAnh(presignedUrl);
+            huynhTruongRepository.save(huynhTruong);
+
+            resultMap.put("success", "Upload ảnh thành công");
+        } catch (IOException e) {
+            resultMap.put("error", "Lỗi khi upload ảnh: " + file.getOriginalFilename() + " - " + e.getMessage());
+        }
+        return CompletableFuture.completedFuture(resultMap);
+    }
 }
