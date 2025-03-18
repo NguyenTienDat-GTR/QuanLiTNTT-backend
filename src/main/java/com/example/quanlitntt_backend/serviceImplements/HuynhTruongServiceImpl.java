@@ -20,11 +20,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -308,7 +304,7 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
     }
 
     @Override
-    public CompletableFuture<List<Map<String, String>>> uploadAvatarInDirectory(String directoryPath) {
+    public CompletableFuture<List<Map<String, String>>> uploadAvatarInDirectory(String directoryPath, String folderName) {
         File folder = new File(directoryPath);
         File[] files = folder.listFiles();
 
@@ -323,7 +319,7 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
 
         for (File file : files) {
             if (file.isFile() && isImageFile(file)) {
-                futures.add(CompletableFuture.supplyAsync(() -> processAndUploadImage(file), executor));
+                futures.add(CompletableFuture.supplyAsync(() -> processAndUploadImage(file, folderName), executor));
             }
         }
 
@@ -335,7 +331,7 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
                 );
     }
 
-    private Map<String, String> processAndUploadImage(File file) {
+    private Map<String, String> processAndUploadImage(File file, String folderName) {
         Map<String, String> resultMap = new HashMap<>();
         try {
             String maHT = file.getName().substring(0, file.getName().lastIndexOf("."));
@@ -349,7 +345,7 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
             byte[] jpegData = convertImageToJpeg(file);
 
             if (jpegData != null) {
-                String uploadedFileName = wasabiService.checkAndReplaceFile(maHT, jpegData);
+                String uploadedFileName = wasabiService.checkAndReplaceFile(maHT, jpegData, folderName);
 
                 // Thực hiện upload lên Wasabi
 //                wasabiService.uploadFile(fileName, jpegData);
@@ -425,7 +421,7 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
 
     // Hàm upload ảnh từ việc chọn 1 ảnh cho 1 huynh trưởng
     @Override
-    public CompletableFuture<Map<String, String>> uploadAvatar(MultipartFile file, String maHT) {
+    public CompletableFuture<Map<String, String>> uploadAvatar(MultipartFile file, String maHT, String folderName) {
         Map<String, String> resultMap = new HashMap<>();
         try {
             Optional<HuynhTruong> huynhTruongOptional = huynhTruongRepository.findById(maHT);
@@ -455,7 +451,7 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
             byte[] jpegData = outputStream.toByteArray();
 
             // Upload ảnh lên Wasabi
-            String uploadedFileName = wasabiService.checkAndReplaceFile(maHT, jpegData);
+            String uploadedFileName = wasabiService.checkAndReplaceFile(maHT, jpegData, folderName);
 
             // Lưu URL vào database
             String presignedUrl = wasabiService.generatePreSignedUrl(uploadedFileName);

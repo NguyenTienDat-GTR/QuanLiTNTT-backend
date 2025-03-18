@@ -40,9 +40,9 @@ public interface HuynhTruongService {
     public void activeHuynhTruong(String maHT);
 
     // upload avatar ừ thư mục chứa các file ảnh
-    public CompletableFuture<List<Map<String, String>>> uploadAvatarInDirectory(String directoryPath);
+    public CompletableFuture<List<Map<String, String>>> uploadAvatarInDirectory(String directoryPath, String folderName);
 
     // upload avatar từ việc chọn 1 ảnh cho 1 huynh trưởng
-    public CompletableFuture<Map<String, String>> uploadAvatar(MultipartFile file, String maHT);
+    public CompletableFuture<Map<String, String>> uploadAvatar(MultipartFile file, String maHT, String folderName);
 
 }

@@ -227,7 +227,7 @@ public class HuynhTruongController {
             // Decode URL nếu cần thiết
             String decodedFolderPath = URLDecoder.decode(folderPath, StandardCharsets.UTF_8);
 
-            CompletableFuture<List<Map<String, String>>> uploadFuture = huynhTruongService.uploadAvatarInDirectory(decodedFolderPath);
+            CompletableFuture<List<Map<String, String>>> uploadFuture = huynhTruongService.uploadAvatarInDirectory(decodedFolderPath, "avatar_HT/");
             List<Map<String, String>> errors = uploadFuture.join();
 
             if (errors.isEmpty()) {
@@ -246,7 +246,7 @@ public class HuynhTruongController {
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
     public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file, @PathVariable String maHT) {
         try {
-            CompletableFuture<Map<String, String>> uploadFuture = huynhTruongService.uploadAvatar(file, maHT);
+            CompletableFuture<Map<String, String>> uploadFuture = huynhTruongService.uploadAvatar(file, maHT, "avatar_HT/");
             return ResponseEntity.ok(uploadFuture.join());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi upload ảnh: " + e.getMessage());
