@@ -41,7 +41,9 @@ public class AuthServiceImpl implements AuthService {
         // Ép kiểu UserDetails về TaiKhoanDetail để lấy thông tin tài khoản đầy đủ
         TaiKhoanDetail taiKhoanDetail = (TaiKhoanDetail) userDetails;
         TaiKhoan taiKhoan = taiKhoanDetail.getTaiKhoan();
-
+        if (!taiKhoanDetail.getTaiKhoan().isHoatDong()) {
+            throw new RuntimeException("Tài khoản đã bị khóa");
+        }
         return jwtUtil.generateToken(taiKhoan.getTenDangNhap(), taiKhoan.getVaiTro().name());
     }
 

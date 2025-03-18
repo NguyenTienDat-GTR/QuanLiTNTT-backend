@@ -91,7 +91,7 @@ public class WasabiService {
         }
     }
 
-    // Tạo URL truy cập tạm thời (Pre-signed URL)
+    // Tạo URL truy cập tạm thời (Pre-signed URL) dành cho ảnh
     public String generatePreSignedUrl(String fileName) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
