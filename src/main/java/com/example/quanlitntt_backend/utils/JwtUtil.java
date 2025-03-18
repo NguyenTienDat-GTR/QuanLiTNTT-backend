@@ -1,5 +1,6 @@
 package com.example.quanlitntt_backend.utils;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -12,8 +13,11 @@ import java.util.function.Function;
 
 @Component
 public class JwtUtil {
+
+    private final Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+
     private final String SECRET_KEY = Base64.getEncoder().encodeToString(
-            "mot qua soi, hai qua soi, mot cay nam, ba qua thong voi mot qua oc cho nua".getBytes()
+            dotenv.get("JWT_SECRET").getBytes()
     );
     private final long JWT_EXPIRATION = 1000 * 60 * 60 * 24; // 1 ngày
 

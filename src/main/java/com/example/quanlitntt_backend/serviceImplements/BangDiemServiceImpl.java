@@ -246,7 +246,6 @@ public class BangDiemServiceImpl implements BangDiemService {
         bangDiem.setDiemThiGL_HKI(bangDiemDto.getDiemThiGL_HKI() >= 0 ? bangDiemDto.getDiemThiGL_HKI() : null);
         bangDiem.setDiemThiTN_HKI(bangDiemDto.getDiemThiTN_HKI() >= 0 ? bangDiemDto.getDiemThiTN_HKI() : null);
 
-
         if (bangDiem.getDiemTB_HKI() == null) {
             throw new RuntimeException("Phải có điểm trung bình học kì I mới được phép nhập điểm học kì II");
         }

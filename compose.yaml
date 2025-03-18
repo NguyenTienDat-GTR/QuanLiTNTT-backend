@@ -6,8 +6,8 @@ services:
     container_name: mysql_container
     restart: always
     environment:
-      MYSQL_DATABASE: QuanLiTNTT
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
     ports:
       - '3306:3306'
 
