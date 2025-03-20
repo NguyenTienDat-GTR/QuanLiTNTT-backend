@@ -1,6 +1,7 @@
 package com.example.quanlitntt_backend.controllers;
 
 import com.example.quanlitntt_backend.dto.ThieuNhiDto;
+import com.example.quanlitntt_backend.entities.ThieuNhi;
 import com.example.quanlitntt_backend.serviceImplements.ThieuNhiServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @RequestMapping("/api/thieuNhi")
 @RestController
@@ -31,7 +35,11 @@ public class ThieuNhiController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Tên thánh, họ, tên không được trống");
             }
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(thieuNhiService.addThieuNhi(thieuNhiDto));
+            ThieuNhi tn = thieuNhiService.addThieuNhi(thieuNhiDto);
+
+            thieuNhiService.generateAndUploadQRCode(tn.getMaTN());
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(tn);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -145,7 +153,42 @@ public class ThieuNhiController {
         }
     }
 
-//    @PostMapping("/addFromFileExcel")
-//    @PreAuthorize("isAuthenticated()")
+    // Generate and upload QR code
+    @CrossOrigin(origins = "*")
+    @PostMapping("/create-qrcode")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
+    public ResponseEntity<?> generateAndUploadQRCode(@RequestBody List<String> dsMaTN) {
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+
+        try {
+            for (String maTN : dsMaTN) {
+                if (thieuNhiService.getThieuNhiByMa(maTN).isEmpty()) {
+                    errors.add("Không tìm thấy Thiếu nhi với mã: " + maTN);
+                    continue;
+                }
+
+                CompletableFuture<Void> future = thieuNhiService.generateAndUploadQRCode(maTN)
+                        .exceptionally(ex -> {
+                            errors.add(ex.getMessage());
+                            return null;
+                        });
+
+                futures.add(future);
+            }
+
+            // Chờ tất cả các tác vụ hoàn thành
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+            if (errors.isEmpty()) {
+                return ResponseEntity.ok("Tạo và upload QR code thành công");
+            } else {
+                return ResponseEntity.ok(errors);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi tạo và upload QR code: " + e.getMessage());
+        }
+    }
 
 }

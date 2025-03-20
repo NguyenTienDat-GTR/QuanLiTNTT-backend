@@ -183,7 +183,7 @@ public class HuynhTruongController {
 
 
     @GetMapping("/getByMa/{maHT}")
-    @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
+    @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
     public ResponseEntity<?> getHuynhTruongByMa(@PathVariable("maHT") String maHT) {
         try {
             return huynhTruongService.getHuynhTruongByMa(maHT)

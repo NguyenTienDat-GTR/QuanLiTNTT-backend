@@ -26,4 +26,6 @@ public interface ThieuNhiService {
     public void activeThieuNhi(String maTN);
 
     public CompletableFuture<List<String>> addThieuNhiFromFileExcel(MultipartFile file);
+
+    public CompletableFuture<Void> generateAndUploadQRCode(String maTN) throws Exception;
 }

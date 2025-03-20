@@ -108,8 +108,8 @@ public class WasabiService {
     }
 
     // Kiểm tra và thay thế file đã tồn tại trên Wasabi
-    public String checkAndReplaceFile(String maHT, byte[] fileData, String folderName) throws IOException {
-        String fileName = folderName + maHT;
+    public String checkAndReplaceFile(String ma, byte[] fileData, String folderName) throws IOException {
+        String fileName = folderName + ma;
 
         // Kiểm tra xem file có tồn tại không
         try {

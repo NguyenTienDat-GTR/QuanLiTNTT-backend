@@ -291,6 +291,7 @@ public class LopNamHocController {
             for (String maTN : maThieuNhiList) {
                 try {
                     lopNamHocService.addThieuNhiVaoLop(maTN, maLop, namHoc);
+                    thieuNhiService.generateAndUploadQRCode(maTN);
                     addedThieuNhis.add(maTN);
                 } catch (RuntimeException e) {
                     failedThieuNhis.add(maTN + ": " + e.getMessage());
@@ -305,6 +306,7 @@ public class LopNamHocController {
         }
     }
 
+    // thêm thiếu nhi vào lớp bằng cách nhập tay
     @PostMapping("/add-thieuNhi-lop")
     @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
     public ResponseEntity<?> addThieuNhiVaoLop(@RequestBody List<ThieuNhiDto> thieuNhiDtos,
@@ -360,6 +362,7 @@ public class LopNamHocController {
                 try {
                     ThieuNhi tn = thieuNhiService.addThieuNhi(dto);
                     lopNamHocService.addThieuNhiVaoLop(tn.getMaTN(), maLop, namHoc);
+                    thieuNhiService.generateAndUploadQRCode(tn.getMaTN());
                     addedThieuNhis.add(tn.getMaTN());
                 } catch (RuntimeException e) {
                     failedThieuNhis.add("Lỗi " + e.getMessage());
@@ -374,6 +377,7 @@ public class LopNamHocController {
         }
     }
 
+    // thêm thiếu nhi vào lớp theo mã thiếu nhi
     @PostMapping("/add-thieuNhi-lop-byMaTN")
     @PreAuthorize("isAuthenticated() AND !hasRole('THIEUNHI')")
     public ResponseEntity<?> addThieuNhiVaoLopByMaTN(@RequestBody List<String> dsMaTN,

@@ -491,19 +491,30 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
     public CompletableFuture<Void> generateAndUploadQRCode(String maHT) {
         return CompletableFuture.runAsync(() -> {
             try {
-                String qrContent = ipAddress + "/api/huynhtruong/getByMa/" + maHT;
-                byte[] qrImage = qrCodeUtil.generateQRCodeImage(qrContent, 300, 300);
-                String qr_url = wasabiService.checkAndReplaceFile(maHT, qrImage, "qr_HT/");
-
+                // Lấy thông tin HuynhTruong từ CSDL
                 HuynhTruong huynhTruong = huynhTruongRepository.findById(maHT).orElseThrow(() ->
                         new RuntimeException("Không tìm thấy HuynhTruong với mã: " + maHT));
 
+                // Tạo nội dung QR code dưới dạng JSON
+                String qrContent = String.format(
+                        "{\"maHT\":\"%s\", \"tenThanh\":\"%s\", \"ho\":\"%s\", \"ten\":\"%s\"}",
+                        huynhTruong.getMaHT(),
+                        huynhTruong.getTenThanh(),
+                        huynhTruong.getHo(),
+                        huynhTruong.getTen()
+                );
+
+                // Tạo mã QR
+                byte[] qrImage = qrCodeUtil.generateQRCodeImage(qrContent, 300, 300);
+
+                // Upload ảnh QR lên Wasabi
+                String qr_url = wasabiService.checkAndReplaceFile(maHT, qrImage, "qr_HT/");
                 if (qr_url == null) {
                     throw new RuntimeException("Lỗi khi upload QR code cho mã " + maHT);
                 }
 
+                // Lưu URL vào CSDL
                 String presignedUrl = wasabiService.generatePreSignedUrl(qr_url);
-
                 huynhTruong.setQr_code(presignedUrl);
                 huynhTruongRepository.save(huynhTruong);
             } catch (Exception e) {
@@ -511,4 +522,5 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
             }
         });
     }
+
 }
