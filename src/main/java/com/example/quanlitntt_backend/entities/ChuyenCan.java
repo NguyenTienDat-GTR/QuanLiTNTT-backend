@@ -18,13 +18,12 @@ import java.util.Date;
 public class ChuyenCan {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaChuyenCan")
-    private int maChuyenCan;
+    private String maChuyenCan;
 
     @Column(name = "ngayDiemDanh")
     @PastOrPresent(message = "Ngày điểm danh phải là ngày trong quá khứ hoặc hiện tại")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy",timezone = "Asia/Ho_Chi_Minh")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd/MM/yyyy", timezone = "Asia/Ho_Chi_Minh")
 //    @JsonDeserialize(using = LocalDateDeserializer.class)
     private Date ngayDiemDanh;
 

@@ -1,7 +1,6 @@
 package com.example.quanlitntt_backend.serviceImplements;
 
 import com.example.quanlitntt_backend.dto.ThieuNhiDto;
-import com.example.quanlitntt_backend.entities.HuynhTruong;
 import com.example.quanlitntt_backend.entities.ThieuNhi;
 import com.example.quanlitntt_backend.entities.enums.GioiTinh;
 import com.example.quanlitntt_backend.entities.enums.TrangThaiHocVu;
@@ -41,7 +40,7 @@ public class ThieuNhiServiceImpl implements ThieuNhiService {
     private final QRCodeUtil qrCodeUtil = new QRCodeUtil();
 
     @Autowired
-    private WasabiService wasabiService;
+    private CloudinaryService cloudinaryService;
 
     public ThieuNhiServiceImpl(TaiKhoanServiceImpl taiKhoanService) {
         this.taiKhoanService = taiKhoanService;
@@ -341,14 +340,13 @@ public class ThieuNhiServiceImpl implements ThieuNhiService {
                 byte[] qrImage = qrCodeUtil.generateQRCodeImage(qrContent, 300, 300);
 
                 // Upload ảnh QR lên Wasabi
-                String qr_url = wasabiService.checkAndReplaceFile(maTN, qrImage, "qr_TN/");
+                String qr_url = cloudinaryService.checkAndReplaceFile(maTN, qrImage, "qr_TN/");
                 if (qr_url == null) {
                     throw new RuntimeException("Lỗi khi upload QR code cho mã " + maTN);
                 }
 
-                // Lưu URL vào CSDL
-                String presignedUrl = wasabiService.generatePreSignedUrl(qr_url);
-                thieuNhi.setQr_code(presignedUrl);
+
+                thieuNhi.setQr_code(qr_url);
                 thieuNhiRepository.save(thieuNhi);
             } catch (Exception e) {
                 throw new RuntimeException("Lỗi khi tạo QR code cho mã " + maTN + ": " + e.getMessage(), e);

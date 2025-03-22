@@ -59,9 +59,8 @@ public class LopNamHoc {
     )
     private List<ThieuNhi> danhSachThieuNhi = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "maBangDiemDanh")
-    protected BangDiemDanh bangDiemDanh;
+    @OneToMany(mappedBy = "lopNamHoc", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<BangDiemDanh> bangDiemDanh;
 
     @OneToMany(mappedBy = "lopNamHoc", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<BangDiem> bangDiemList = new ArrayList<>();

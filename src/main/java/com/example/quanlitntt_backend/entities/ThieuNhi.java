@@ -110,7 +110,6 @@ public class ThieuNhi {
     private BangDiem bangDiem;
 
     @Column(name = "qr_code", length = 1000)
-    @NotNull(message = "QR_code không được để trống")
     private String qr_code;
 
 }

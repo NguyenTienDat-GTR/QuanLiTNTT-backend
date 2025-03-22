@@ -5,7 +5,7 @@ import com.example.quanlitntt_backend.entities.HuynhTruong;
 import com.example.quanlitntt_backend.entities.enums.CapSao;
 import com.example.quanlitntt_backend.serviceImplements.HuynhTruongServiceImpl;
 import com.example.quanlitntt_backend.serviceImplements.TaiKhoanServiceImpl;
-import com.example.quanlitntt_backend.utils.WasabiService;
+import com.example.quanlitntt_backend.utils.CloudinaryService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -32,7 +32,7 @@ public class HuynhTruongController {
     private TaiKhoanServiceImpl taiKhoanService;
 
     @Autowired
-    private WasabiService wasabiService;
+    private CloudinaryService cloudinaryService;
 
     @PostMapping("/add")
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
@@ -228,7 +228,7 @@ public class HuynhTruongController {
             // Decode URL nếu cần thiết
             String decodedFolderPath = URLDecoder.decode(folderPath, StandardCharsets.UTF_8);
 
-            CompletableFuture<List<Map<String, String>>> uploadFuture = huynhTruongService.uploadAvatarInDirectory(decodedFolderPath, "avatar_HT/");
+            CompletableFuture<List<Map<String, String>>> uploadFuture = huynhTruongService.uploadAvatarInDirectory(decodedFolderPath, "avatar_HT");
             List<Map<String, String>> errors = uploadFuture.join();
 
             if (errors.isEmpty()) {
@@ -247,7 +247,7 @@ public class HuynhTruongController {
     @PreAuthorize("hasAnyRole('ADMIN','XUDOANTRUONG','THUKY')")
     public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file, @PathVariable String maHT) {
         try {
-            CompletableFuture<Map<String, String>> uploadFuture = huynhTruongService.uploadAvatar(file, maHT, "avatar_HT/");
+            CompletableFuture<Map<String, String>> uploadFuture = huynhTruongService.uploadAvatar(file, maHT, "avatar_HT");
             return ResponseEntity.ok(uploadFuture.join());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi upload ảnh: " + e.getMessage());

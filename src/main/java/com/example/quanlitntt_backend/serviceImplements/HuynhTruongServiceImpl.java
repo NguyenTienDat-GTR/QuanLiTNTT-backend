@@ -44,7 +44,7 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
     private TaiKhoanRepository taiKhoanRepository;
 
     @Autowired
-    private WasabiService wasabiService;
+    private CloudinaryService cloudinaryService;
 
     private final QRCodeUtil qrCodeUtil = new QRCodeUtil();
 
@@ -366,22 +366,23 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
             byte[] jpegData = convertImageToJpeg(file);
 
             if (jpegData != null) {
-                String uploadedFileName = wasabiService.checkAndReplaceFile(maHT, jpegData, folderName);
-
-                // Thực hiện upload lên Wasabi
-//                wasabiService.uploadFile(fileName, jpegData);
+                // Upload ảnh lên Cloudinary
+                String imageUrl = cloudinaryService.checkAndReplaceFile(maHT, jpegData, folderName);
 
                 // Lưu URL vào database
-                String presignedUrl = wasabiService.generatePreSignedUrl(uploadedFileName);
                 HuynhTruong huynhTruong = huynhTruongOptional.get();
-                huynhTruong.setHinhAnh(presignedUrl);
+                huynhTruong.setHinhAnh(imageUrl);
                 huynhTruongRepository.save(huynhTruong);
+
+                resultMap.put("success", "Upload ảnh thành công cho HuynhTruong: " + maHT);
+                resultMap.put("imageUrl", imageUrl);
             }
         } catch (IOException e) {
             resultMap.put("error", "Lỗi khi upload ảnh: " + file.getName() + " - " + e.getMessage());
         }
         return resultMap;
     }
+
 
     private boolean isImageFile(Object file) {
         String[] imageExtensions = {"jpg", "jpeg", "png", "bmp", "gif"};
@@ -471,21 +472,22 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
             ImageIO.write(image, "jpeg", outputStream);
             byte[] jpegData = outputStream.toByteArray();
 
-            // Upload ảnh lên Wasabi
-            String uploadedFileName = wasabiService.checkAndReplaceFile(maHT, jpegData, folderName);
+            // Upload ảnh lên Cloudinary
+            String imageUrl = cloudinaryService.checkAndReplaceFile(maHT, jpegData, folderName);
 
             // Lưu URL vào database
-            String presignedUrl = wasabiService.generatePreSignedUrl(uploadedFileName);
             HuynhTruong huynhTruong = huynhTruongOptional.get();
-            huynhTruong.setHinhAnh(presignedUrl);
+            huynhTruong.setHinhAnh(imageUrl);
             huynhTruongRepository.save(huynhTruong);
 
             resultMap.put("success", "Upload ảnh thành công");
+            resultMap.put("imageUrl", imageUrl);
         } catch (IOException e) {
             resultMap.put("error", "Lỗi khi upload ảnh: " + file.getOriginalFilename() + " - " + e.getMessage());
         }
         return CompletableFuture.completedFuture(resultMap);
     }
+
 
     @Override
     public CompletableFuture<Void> generateAndUploadQRCode(String maHT) {
@@ -507,20 +509,21 @@ public class HuynhTruongServiceImpl implements HuynhTruongService {
                 // Tạo mã QR
                 byte[] qrImage = qrCodeUtil.generateQRCodeImage(qrContent, 300, 300);
 
-                // Upload ảnh QR lên Wasabi
-                String qr_url = wasabiService.checkAndReplaceFile(maHT, qrImage, "qr_HT/");
-                if (qr_url == null) {
+                // Upload ảnh QR lên Cloudinary
+                String qrUrl = cloudinaryService.checkAndReplaceFile(maHT, qrImage, "qr_HT");
+
+                if (qrUrl == null) {
                     throw new RuntimeException("Lỗi khi upload QR code cho mã " + maHT);
                 }
 
                 // Lưu URL vào CSDL
-                String presignedUrl = wasabiService.generatePreSignedUrl(qr_url);
-                huynhTruong.setQr_code(presignedUrl);
+                huynhTruong.setQr_code(qrUrl);
                 huynhTruongRepository.save(huynhTruong);
             } catch (Exception e) {
                 throw new RuntimeException("Lỗi khi tạo QR code cho mã " + maHT + ": " + e.getMessage(), e);
             }
         });
     }
+
 
 }

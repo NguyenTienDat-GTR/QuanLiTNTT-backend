@@ -17,10 +17,21 @@ public class BangDiemDanh {
     @Id
     private String maBangDiemDanh;
 
-    @Column(name = "soNgayKhongPhep")
+    @Column(name = "soNgayKhongPhep", columnDefinition = "int default 0")
     @Min(value = 0, message = "Số ngày không phép phải lớn hơn hoặc bằng 0")
-    private int soNgayKHongPhep;
+    private int soNgayKhongPhep;
 
     @OneToMany(mappedBy = "bangDiemDanh", fetch = FetchType.LAZY)
     private List<ChuyenCan> chuyenCans;
+
+    @ManyToOne
+    @JoinColumns({
+            @JoinColumn(name = "maLop", referencedColumnName = "maLop"),
+            @JoinColumn(name = "namHoc", referencedColumnName = "namHoc")
+    })
+    private LopNamHoc lopNamHoc;
+
+    @OneToOne
+    @JoinColumn(name = "maTN", nullable = false, unique = true)
+    private ThieuNhi thieuNhi;
 }
